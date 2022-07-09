@@ -99,7 +99,7 @@ void KArmedBanditAgent::process_outcome(double reward, e_reward_function reward_
     q_[last_action_] += delta_q;
 
     // Update the sum of reward
-    // sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
+    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
     sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
     if (agent_info_file_) {
         fprintf(agent_info_file_, "%zu,", last_action_);
@@ -479,6 +479,9 @@ size_t UCBAgent::propose_action() {
 //Update UCB values
 void UCBAgent::update_q() {
     for (size_t i = 0; i < num_available_actions_; i++) {
-        q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i]); 
+        // f(t) = t
+        //q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i]);
+        // f(t) = 1 + t * log(t)^2
+        q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_ * std::pow(std::log(t_), 2) + 1) / num_action_chosen_[i]);
     }
 }
