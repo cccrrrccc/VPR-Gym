@@ -100,6 +100,7 @@ void KArmedBanditAgent::process_outcome(double reward, e_reward_function reward_
 
     // Update the sum of reward
     //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
+    // Step mode
     sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
     if (agent_info_file_) {
         fprintf(agent_info_file_, "%zu,", last_action_);
