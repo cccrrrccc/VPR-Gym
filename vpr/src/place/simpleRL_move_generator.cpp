@@ -63,6 +63,18 @@ SimpleRLMoveGenerator::SimpleRLMoveGenerator(std::unique_ptr<UCBAgent>& agent) {
     karmed_bandit_agent = std::move(agent);
 }
 
+SimpleRLMoveGenerator::SimpleRLMoveGenerator(std::unique_ptr<UCB1_Agent>& agent) {
+    avail_moves.push_back(std::move(std::make_unique<UniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<MedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedCentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedMedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CriticalUniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<FeasibleRegionMoveGenerator>()));
+
+    karmed_bandit_agent = std::move(agent);
+}
+
 e_create_move SimpleRLMoveGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities) {
     move_type = (e_move_type)karmed_bandit_agent->propose_action();
     return avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
@@ -102,6 +114,7 @@ void KArmedBanditAgent::process_outcome(double reward, e_reward_function reward_
     //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
     // Step mode
     sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
+    sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
     if (agent_info_file_) {
         fprintf(agent_info_file_, "%zu,", last_action_);
         fprintf(agent_info_file_, "%g,", reward);
@@ -131,6 +144,7 @@ EpsilonGreedyAgent::EpsilonGreedyAgent(size_t num_actions, float epsilon) {
     q_ = std::vector<float>(num_actions, 0.);
     num_action_chosen_ = std::vector<size_t>(num_actions, 0);
     sum_reward_ = std::vector<float>(num_actions, 0.);
+    sum_reward_square_ = std::vector<float>(num_actions, 0.);
     cumm_epsilon_action_prob_ = std::vector<float>(num_actions, 1.0 / num_actions);
     if (agent_info_file_) {
         fprintf(agent_info_file_, "action,reward,");
@@ -221,6 +235,7 @@ SoftmaxAgent::SoftmaxAgent(size_t num_actions) {
     num_action_chosen_ = std::vector<size_t>(num_actions, 0);
     action_prob_ = std::vector<float>(num_actions, 0.);
     sum_reward_ = std::vector<float>(num_actions, 0.);
+    sum_reward_square_ = std::vector<float>(num_actions, 0.);
     cumm_action_prob_ = std::vector<float>(num_actions);
     if (agent_info_file_) {
         fprintf(agent_info_file_, "action,reward,");
@@ -319,6 +334,7 @@ EpsilonDecayAgent::EpsilonDecayAgent(size_t num_actions, float beta) {
     q_ = std::vector<float>(num_actions, 0.);
     num_action_chosen_ = std::vector<size_t>(num_actions, 0);
     sum_reward_ = std::vector<float>(num_actions, 0.);
+    sum_reward_square_ = std::vector<float>(num_actions, 0.);
     cumm_epsilon_action_prob_ = std::vector<float>(num_actions, 1.0 / num_actions);
     if (agent_info_file_) {
         fprintf(agent_info_file_, "action,reward,");
@@ -412,6 +428,7 @@ UCBAgent::UCBAgent(size_t num_actions, float c) {
     num_available_actions_ = num_actions;
     q_ = std::vector<float>(num_actions, 0.);
     sum_reward_ = std::vector<float>(num_actions, 0.);
+    sum_reward_square_ = std::vector<float>(num_actions, 0.);
     num_action_chosen_ = std::vector<size_t>(num_actions, 0);
     t_ = 0;
 
@@ -484,5 +501,93 @@ void UCBAgent::update_q() {
         //q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i]);
         // f(t) = 1 + t * log(t)^2
         q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_ * std::pow(std::log(t_), 2) + 1) / num_action_chosen_[i]);
+    }
+}
+
+/*                                  *
+ *                                  *
+ *  UCB     agent implementation    *
+ *                                  *
+ *                                  */
+UCB1_Agent::UCB1_Agent(size_t num_actions, float c) {
+    set_c(c);
+    num_available_actions_ = num_actions;
+    q_ = std::vector<float>(num_actions, 0.);
+    sum_reward_ = std::vector<float>(num_actions, 0.);
+    sum_reward_square_ = std::vector<float>(num_actions, 0.);
+    num_action_chosen_ = std::vector<size_t>(num_actions, 0);
+    t_ = 0;
+
+    if (agent_info_file_) {
+        fprintf(agent_info_file_, "action,reward,");
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "q%zu,", i);
+        }
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "n%zu,", i);
+        }
+        fprintf(agent_info_file_, "\n");
+    }
+}
+
+UCB1_Agent::~UCB1_Agent() {
+    if (agent_info_file_) vtr::fclose(agent_info_file_);
+}
+
+void UCB1_Agent::set_c(float c) {
+    c_ = c;
+}
+
+void UCB1_Agent::set_step(float gamma, int move_lim) {
+    VTR_LOG("Setting decay step: %g\n", exp_alpha_);
+    if (gamma < 0) {
+        exp_alpha_ = -1; //Use sample average
+    } else {
+        //
+        // For an exponentially wieghted average the fraction of total weight applied to
+        // to moves which occured > K moves ago is:
+        //
+        //      gamma = (1 - alpha)^K
+        //
+        // If we treat K as the number of moves per temperature (move_lim) then gamma
+        // is the fraction of weight applied to moves which occured > move_lim moves ago,
+        // and given a target gamma we can explicitly calcualte the alpha step-size
+        // required by the agent:
+        //
+        //     alpha = 1 - e^(log(gamma) / K)
+        //
+        float alpha = 1 - std::exp(std::log(gamma) / move_lim);
+        exp_alpha_ = alpha;
+    }
+}
+
+// choose an action
+size_t UCB1_Agent::propose_action() {
+    size_t action = 0;
+    if (t_ < num_available_actions_) {
+        action = t_;
+    }
+    else {
+        // Find the max q value
+        update_q();
+        auto itr = std::max_element(q_.begin(), q_.end());
+        VTR_ASSERT(itr != q_.end());
+        action = itr - q_.begin();
+    }
+    VTR_ASSERT(action < num_available_actions_);
+
+    last_action_ = action;
+    return action;
+}
+
+//Update UCB values
+void UCB1_Agent::update_q() {
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        // f(t) = t
+        //q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i]);
+        // f(t) = 1 + t * log(t)^2
+        float V = sum_reward_square_[i] / num_action_chosen_[i] - std::pow(sum_reward_[i] / num_action_chosen_[i], 2) + std::sqrt(2 * std::log(t_) / num_action_chosen_[i]);
+        V = std::min(V, float(0.25));
+        q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i] * V);
     }
 }

@@ -909,7 +909,8 @@ enum e_agent_algorithm {
     E_GREEDY,
     SOFTMAX,
     E_DECAY,
-    UCB
+    UCB,
+    UCB_1
 };
 
 ///@brief Used to calculate the inner placer loop's block swapping limit move_lim.

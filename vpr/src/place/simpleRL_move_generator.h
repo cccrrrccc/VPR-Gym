@@ -31,8 +31,9 @@ class KArmedBanditAgent {
     std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
     size_t t_ = 0;
     std::vector<float> sum_reward_;       //The sum of reward
-    FILE* agent_info_file_ = fopen("agent.txt", "w");
-    //FILE* agent_info_file_ = NULL;
+    std::vector<float> sum_reward_square_;       //The sum of reward's square
+    //FILE* agent_info_file_ = fopen("agent.txt", "w");
+    FILE* agent_info_file_ = NULL;
 };
 
 /**
@@ -135,6 +136,29 @@ class UCBAgent : public KArmedBanditAgent {
     float c_ = 0.01;
 };
 
+/**
+ * @brief UCB agent implementation to address K-armed bandit problems
+ *
+ * In this class, the RL agent adresses the exploration-exploitation dilemma using UCB
+ * 
+ * 
+ */
+class UCB1_Agent : public KArmedBanditAgent {
+  public:
+    UCB1_Agent(size_t num_actions, float c);
+    ~UCB1_Agent();
+
+    //void process_outcome(double reward, std::string reward_fun) override; //Updates the agent based on the reward of the last proposed action
+    size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
+    void process_outcome(double reward, e_reward_function reward_fun);
+  public:
+    void set_step(float gamma, int move_lim);
+    void set_c(float c);
+    void update_q();
+
+  private:
+    float c_ = 0.01;
+};
 
 /**
  * @brief This class represents the move generator that uses simple RL agent
@@ -154,6 +178,7 @@ class SimpleRLMoveGenerator : public MoveGenerator {
     SimpleRLMoveGenerator(std::unique_ptr<SoftmaxAgent>& agent);
     SimpleRLMoveGenerator(std::unique_ptr<EpsilonDecayAgent>& agent);
     SimpleRLMoveGenerator(std::unique_ptr<UCBAgent>& agent);
+    SimpleRLMoveGenerator(std::unique_ptr<UCB1_Agent>& agent);
 
     // Updates affected_blocks with the proposed move, while respecting the current rlim
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
