@@ -127,6 +127,29 @@ void create_move_generators(std::unique_ptr<MoveGenerator>& move_generator, std:
                 move_generator2 = std::make_unique<SimpleRLMoveGenerator>(karmed_bandit_agent2);
             }
         }
+        else if (placer_opts.place_agent_algorithm == EXP3) {
+            VTR_LOG("Using simple RL 'EXP3' for choosing move types\n");
+            std::unique_ptr<EXP3Agent> karmed_bandit_agent1, karmed_bandit_agent2;
+            if (placer_opts.place_algorithm.is_timing_driven()) {
+                //agent's 1st state
+                karmed_bandit_agent1 = std::make_unique<EXP3Agent>(NUM_PL_1ST_STATE_MOVE_TYPES, placer_opts.place_agent_epsilon);
+                karmed_bandit_agent1->set_step(placer_opts.place_agent_gamma, move_lim);
+                move_generator = std::make_unique<SimpleRLMoveGenerator>(karmed_bandit_agent1);
+                //agent's 2nd state
+                karmed_bandit_agent2 = std::make_unique<EXP3Agent>(NUM_PL_MOVE_TYPES, placer_opts.place_agent_epsilon);
+                karmed_bandit_agent2->set_step(placer_opts.place_agent_gamma, move_lim);
+                move_generator2 = std::make_unique<SimpleRLMoveGenerator>(karmed_bandit_agent2);
+            } else {
+                //agent's 1st state
+                karmed_bandit_agent1 = std::make_unique<EXP3Agent>(NUM_PL_NONTIMING_MOVE_TYPES, placer_opts.place_agent_epsilon);
+                karmed_bandit_agent1->set_step(placer_opts.place_agent_gamma, move_lim);
+                move_generator = std::make_unique<SimpleRLMoveGenerator>(karmed_bandit_agent1);
+                //agent's 2nd state
+                karmed_bandit_agent2 = std::make_unique<EXP3Agent>(NUM_PL_NONTIMING_MOVE_TYPES, placer_opts.place_agent_epsilon);
+                karmed_bandit_agent2->set_step(placer_opts.place_agent_gamma, move_lim);
+                move_generator2 = std::make_unique<SimpleRLMoveGenerator>(karmed_bandit_agent2);
+            }
+        }
         else {
             VTR_LOG("Using simple RL 'Softmax agent' for choosing move types\n");
             std::unique_ptr<SoftmaxAgent> karmed_bandit_agent1, karmed_bandit_agent2;

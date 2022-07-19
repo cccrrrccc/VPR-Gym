@@ -442,6 +442,8 @@ struct ParsePlaceAgentAlgorithm {
             conv_value.set_value(UCB);
         else if (str == "ucb_1")
             conv_value.set_value(UCB_1);
+        else if (str == "exp3")
+            conv_value.set_value(EXP3);
         else {
             std::stringstream msg;
             msg << "Invalid conversion from '" << str << "' to e_agent_algorithm (expected one of: " << argparse::join(default_choices(), ", ") << ")";
@@ -460,6 +462,8 @@ struct ParsePlaceAgentAlgorithm {
             conv_value.set_value("ucb");
         else if (val == UCB_1)
             conv_value.set_value("ucb_1");
+        else if (val == EXP3)
+            conv_value.set_value("exp3");
         else {
             VTR_ASSERT(val == SOFTMAX);
             conv_value.set_value("softmax");
@@ -468,7 +472,7 @@ struct ParsePlaceAgentAlgorithm {
     }
 
     std::vector<std::string> default_choices() {
-        return {"e_greedy", "softmax", "e_decay", "ucb", "ucb_1"};
+        return {"e_greedy", "softmax", "e_decay", "ucb", "ucb_1", "exp3"};
     }
 };
 
@@ -2062,7 +2066,7 @@ argparse::ArgumentParser create_arg_parser(std::string prog_name, t_options& arg
     place_grp.add_argument<e_agent_algorithm, ParsePlaceAgentAlgorithm>(args.place_agent_algorithm, "--place_agent_algorithm")
         .help("Controls which placement RL agent is used")
         .default_value("softmax")
-        .choices({"e_greedy", "softmax", "e_decay", "ucb", "ucb_1"})
+        .choices({"e_greedy", "softmax", "e_decay", "ucb", "ucb_1", "exp3"})
         .show_in(argparse::ShowIn::HELP_ONLY);
 
     auto& place_timing_grp = parser.add_argument_group("timing-driven placement options");

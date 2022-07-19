@@ -17,7 +17,7 @@ class KArmedBanditAgent {
   public:
     virtual ~KArmedBanditAgent() {}
     virtual size_t propose_action() = 0;
-    void process_outcome(double, e_reward_function);
+    virtual void process_outcome(double reward, e_reward_function reward_fun) {}
 
   protected:
     float exp_alpha_ = -1;                  //Step size for q_ updates (< 0 implies use incremental average)
@@ -47,7 +47,7 @@ class EpsilonGreedyAgent : public KArmedBanditAgent {
   public:
     EpsilonGreedyAgent(size_t num_actions, float epsilon);
     ~EpsilonGreedyAgent();
-
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
     size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
 
   public:
@@ -72,7 +72,7 @@ class EpsilonDecayAgent : public KArmedBanditAgent {
   public:
     EpsilonDecayAgent(size_t num_actions, float beta);
     ~EpsilonDecayAgent();
-
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
     size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
 
   public:
@@ -99,7 +99,7 @@ class SoftmaxAgent : public KArmedBanditAgent {
     SoftmaxAgent(size_t num_actions);
     ~SoftmaxAgent();
 
-    //void process_outcome(double reward, std::string reward_fun) override; //Updates the agent based on the reward of the last proposed action
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
     size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
 
   public:
@@ -124,9 +124,8 @@ class UCBAgent : public KArmedBanditAgent {
     UCBAgent(size_t num_actions, float c);
     ~UCBAgent();
 
-    //void process_outcome(double reward, std::string reward_fun) override; //Updates the agent based on the reward of the last proposed action
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
     size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
-    void process_outcome(double reward, e_reward_function reward_fun);
   public:
     void set_step(float gamma, int move_lim);
     void set_c(float c);
@@ -148,9 +147,8 @@ class UCB1_Agent : public KArmedBanditAgent {
     UCB1_Agent(size_t num_actions, float c);
     ~UCB1_Agent();
 
-    //void process_outcome(double reward, std::string reward_fun) override; //Updates the agent based on the reward of the last proposed action
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
     size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
-    void process_outcome(double reward, e_reward_function reward_fun);
   public:
     void set_step(float gamma, int move_lim);
     void set_c(float c);
@@ -158,6 +156,26 @@ class UCB1_Agent : public KArmedBanditAgent {
 
   private:
     float c_ = 0.01;
+};
+
+class EXP3Agent : public KArmedBanditAgent {
+  public:
+    EXP3Agent(size_t num_actions, float gamma);
+    ~EXP3Agent();
+
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
+    size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
+  public:
+    void set_action_prob();
+    void set_step(float gamma, int move_lim);
+
+  private:
+    float c_ = 0.01;
+    std::vector<float> w_;
+    float gamma_;
+    std::vector<float> exp_q_;            //The clipped and scaled exponential of the estimated Q value for each action
+    std::vector<float> action_prob_;      //The probability of choosing each action
+    std::vector<float> cumm_action_prob_; //The accumulative probability of choosing each action
 };
 
 /**
@@ -179,6 +197,7 @@ class SimpleRLMoveGenerator : public MoveGenerator {
     SimpleRLMoveGenerator(std::unique_ptr<EpsilonDecayAgent>& agent);
     SimpleRLMoveGenerator(std::unique_ptr<UCBAgent>& agent);
     SimpleRLMoveGenerator(std::unique_ptr<UCB1_Agent>& agent);
+    SimpleRLMoveGenerator(std::unique_ptr<EXP3Agent>& agent);
 
     // Updates affected_blocks with the proposed move, while respecting the current rlim
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);

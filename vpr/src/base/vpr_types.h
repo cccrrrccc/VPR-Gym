@@ -910,7 +910,8 @@ enum e_agent_algorithm {
     SOFTMAX,
     E_DECAY,
     UCB,
-    UCB_1
+    UCB_1,
+    EXP3
 };
 
 ///@brief Used to calculate the inner placer loop's block swapping limit move_lim.
