@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
+#include <limits>
 
 #include "vtr_random.h"
 
@@ -213,95 +214,8 @@ void SoftmaxAgent::process_outcome(double reward, e_reward_function reward_fun) 
     // Update the sum of reward
     //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
     // Step mode
-    sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
-    sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
-    if (agent_info_file_) {
-        fprintf(agent_info_file_, "%zu,", last_action_);
-        fprintf(agent_info_file_, "%g,", reward);
-
-        for (size_t i = 0; i < num_available_actions_; ++i) {
-            fprintf(agent_info_file_, "%g,", q_[i]);
-        }
-
-        for (size_t i = 0; i < num_available_actions_; ++i) {
-            fprintf(agent_info_file_, "%zu", num_action_chosen_[i]);
-            if (i != num_available_actions_ - 1) {
-                fprintf(agent_info_file_, ",");
-            }
-        }
-        fprintf(agent_info_file_, "\n");
-    }
-}
-void UCBAgent::process_outcome(double reward, e_reward_function reward_fun) {
-    ++num_action_chosen_[last_action_];
-    t_++;
-    if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
-        reward /= time_elapsed_[last_action_];
-    //Determine step size
-    float step = 0.;
-    if (exp_alpha_ < 0.) {
-        step = 1. / num_action_chosen_[last_action_]; //Incremental average
-    } else if (exp_alpha_ <= 1) {
-        step = exp_alpha_; //Exponentially wieghted average
-    } else {
-        VTR_ASSERT_MSG(false, "Invalid step size");
-    }
-
-    //Based on the outcome how much should our estimate of q change?
-    float delta_q = step * (reward - q_[last_action_]);
-
-    //Update the estimated value of the last action
-    q_[last_action_] += delta_q;
-
-    // Update the sum of reward
-    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
-    // Step mode
-    sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
-    sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
-    if (agent_info_file_) {
-        fprintf(agent_info_file_, "%zu,", last_action_);
-        fprintf(agent_info_file_, "%g,", reward);
-
-        for (size_t i = 0; i < num_available_actions_; ++i) {
-            fprintf(agent_info_file_, "%g,", q_[i]);
-        }
-
-        for (size_t i = 0; i < num_available_actions_; ++i) {
-            fprintf(agent_info_file_, "%zu", num_action_chosen_[i]);
-            if (i != num_available_actions_ - 1) {
-                fprintf(agent_info_file_, ",");
-            }
-        }
-        fprintf(agent_info_file_, "\n");
-    }
-}
-
-void UCB1_Agent::process_outcome(double reward, e_reward_function reward_fun) {
-    ++num_action_chosen_[last_action_];
-    t_++;
-    if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
-        reward /= time_elapsed_[last_action_];
-    //Determine step size
-    float step = 0.;
-    if (exp_alpha_ < 0.) {
-        step = 1. / num_action_chosen_[last_action_]; //Incremental average
-    } else if (exp_alpha_ <= 1) {
-        step = exp_alpha_; //Exponentially wieghted average
-    } else {
-        VTR_ASSERT_MSG(false, "Invalid step size");
-    }
-
-    //Based on the outcome how much should our estimate of q change?
-    float delta_q = step * (reward - q_[last_action_]);
-
-    //Update the estimated value of the last action
-    q_[last_action_] += delta_q;
-
-    // Update the sum of reward
-    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
-    // Step mode
-    sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
-    sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
+    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
+    //sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
     if (agent_info_file_) {
         fprintf(agent_info_file_, "%zu,", last_action_);
         fprintf(agent_info_file_, "%g,", reward);
@@ -617,8 +531,9 @@ UCBAgent::UCBAgent(size_t num_actions, float c) {
     sum_reward_ = std::vector<float>(num_actions, 0.);
     sum_reward_square_ = std::vector<float>(num_actions, 0.);
     num_action_chosen_ = std::vector<size_t>(num_actions, 0);
+    Decay_N_ = std::vector<float>(num_actions, 0.);
     t_ = 0;
-
+    max_reward_ = 0;
     if (agent_info_file_) {
         fprintf(agent_info_file_, "action,reward,");
         for (size_t i = 0; i < num_available_actions_; ++i) {
@@ -628,11 +543,68 @@ UCBAgent::UCBAgent(size_t num_actions, float c) {
             fprintf(agent_info_file_, "n%zu,", i);
         }
         fprintf(agent_info_file_, "\n");
+        fprintf(agent_info_file_, "step");
     }
 }
 
 UCBAgent::~UCBAgent() {
     if (agent_info_file_) vtr::fclose(agent_info_file_);
+}
+
+void UCBAgent::process_outcome(double reward, e_reward_function reward_fun) {
+    ++num_action_chosen_[last_action_];
+    t_++;
+    if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
+        reward /= time_elapsed_[last_action_];
+    //Determine step size
+    float step = 0.;
+    if (reward > max_reward_) {
+        max_reward_ = reward;
+    }
+    if (exp_alpha_ < 0.) {
+        step = 1. / num_action_chosen_[last_action_]; //Incremental average
+    } else if (exp_alpha_ <= 1) {
+        step = exp_alpha_; //Exponentially wieghted average
+    } else {
+        VTR_ASSERT_MSG(false, "Invalid step size");
+    }
+
+    //Based on the outcome how much should our estimate of q change?
+    //float delta_q = step * (reward - q_[last_action_]);
+
+    //Update the estimated value of the last action
+    //q_[last_action_] += delta_q;
+
+    // Update the sum of reward
+    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
+    // Step mode
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        sum_reward_[i] = sum_reward_[i] * step;
+        Decay_N_[i] = Decay_N_[i] * step;
+    }
+    if (max_reward_ != 0) {
+        reward = reward / max_reward_;
+    }
+    sum_reward_[last_action_] += reward;
+    Decay_N_[last_action_] += 1;
+    //sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
+    if (agent_info_file_) {
+        fprintf(agent_info_file_, "%zu,", last_action_);
+        fprintf(agent_info_file_, "%g,", reward);
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%g,", q_[i]);
+        }
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%zu", num_action_chosen_[i]);
+            if (i != num_available_actions_ - 1) {
+                fprintf(agent_info_file_, ",");
+            }
+        }
+        fprintf(agent_info_file_,",%g", step);
+        fprintf(agent_info_file_, "\n");
+    }
 }
 
 void UCBAgent::set_c(float c) {
@@ -657,8 +629,12 @@ void UCBAgent::set_step(float gamma, int move_lim) {
         //
         //     alpha = 1 - e^(log(gamma) / K)
         //
+        /*
         float alpha = 1 - std::exp(std::log(gamma) / move_lim);
         exp_alpha_ = alpha;
+        */
+        VTR_LOG("move_lim: %g\n", move_lim);
+        exp_alpha_ = gamma;
     }
 }
 
@@ -671,6 +647,11 @@ size_t UCBAgent::propose_action() {
     else {
         // Find the max q value
         update_q();
+        /*
+        std::vector<float> p_ = std::vector<float>(num_available_actions_, 0.);;
+        for (size_t i = 0; i < num_available_actions_; i++) {
+            p_[i] = q_[i] + c_ * std::sqrt(std::log(t_ * std::pow(std::log(t_), 2) + 1) / num_action_chosen_[i]);
+        }*/
         auto itr = std::max_element(q_.begin(), q_.end());
         VTR_ASSERT(itr != q_.end());
         action = itr - q_.begin();
@@ -683,11 +664,17 @@ size_t UCBAgent::propose_action() {
 
 //Update UCB values
 void UCBAgent::update_q() {
+    float decay_t_ = 0;
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        decay_t_ += Decay_N_[i];
+    }
     for (size_t i = 0; i < num_available_actions_; i++) {
         // f(t) = t
         //q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i]);
         // f(t) = 1 + t * log(t)^2
-        q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_ * std::pow(std::log(t_), 2) + 1) / num_action_chosen_[i]);
+        //float mean = sum_reward_[i] / Decay_N_[i];
+        //float V_ = std::max(mean*(1-mean), float(0.002));
+        q_[i] = sum_reward_[i] / Decay_N_[i] + std::sqrt(c_ * std::log(decay_t_) /  Decay_N_[i]);
     }
 }
 
@@ -703,6 +690,10 @@ UCB1_Agent::UCB1_Agent(size_t num_actions, float c) {
     sum_reward_ = std::vector<float>(num_actions, 0.);
     sum_reward_square_ = std::vector<float>(num_actions, 0.);
     num_action_chosen_ = std::vector<size_t>(num_actions, 0);
+    SW_reward_ = std::vector<float>((int) c_, 0.);
+    SW_action_ = std::vector<size_t>((int) c_, (size_t) 0);
+    SW_num_action_chosen_ = std::vector<size_t>(num_actions, 0);
+    SW_count_ = 0;
     t_ = 0;
 
     if (agent_info_file_) {
@@ -717,8 +708,79 @@ UCB1_Agent::UCB1_Agent(size_t num_actions, float c) {
     }
 }
 
+/*
+Sliding-window UCB
+*/
 UCB1_Agent::~UCB1_Agent() {
     if (agent_info_file_) vtr::fclose(agent_info_file_);
+}
+
+void UCB1_Agent::process_outcome(double reward, e_reward_function reward_fun) {
+    ++num_action_chosen_[last_action_];
+    t_++;
+    if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
+        reward /= time_elapsed_[last_action_];
+    //Determine step size
+    float step = 0.;
+    if (exp_alpha_ < 0.) {
+        step = 1. / num_action_chosen_[last_action_]; //Incremental average
+    } else if (exp_alpha_ >= 0) {
+        step = exp_alpha_; //Exponentially wieghted average
+    } else {
+        VTR_ASSERT_MSG(false, "Invalid step size");
+    }
+
+    // Update the sum of reward
+    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
+    // Step mode
+    if (SW_count_ < c_) {
+        // update X_t and N_t
+        sum_reward_[last_action_] += reward;
+        SW_num_action_chosen_[last_action_]++;
+
+        // add to the sliding window
+        SW_reward_[SW_count_] = reward;
+        SW_action_[SW_count_] = last_action_;
+        SW_count_++;
+    }
+    else {
+        SW_num_action_chosen_[SW_action_[0]]--; // Decrease the expelled element's action number by one
+        sum_reward_[SW_action_[0]] -= SW_reward_[0]; // Decrease the sum of reward by the first element of SW_reward
+
+        // update sliding window
+        //std::shift_left(begin(SW_reward_), end(SW_reward_), 1);
+        SW_reward_.erase(SW_reward_.begin());
+        //std::shift_left(begin(SW_action_), end(SW_action_), 1);
+        SW_action_.erase(SW_action_.begin());
+        //SW_reward_[c_ - 1] = reward;
+        SW_reward_.push_back(reward);
+        //SW_action_[c_ - 1] = last_action_;
+        SW_action_.push_back(last_action_);
+
+        // update X_t and N_t
+        sum_reward_[last_action_] += reward;
+        SW_num_action_chosen_[last_action_];
+    }
+    /* UCB_TUNED1
+    sum_reward_[last_action_] = sum_reward_[last_action_] + reward * step;
+    sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
+    */
+    if (agent_info_file_) {
+        fprintf(agent_info_file_, "%zu,", last_action_);
+        fprintf(agent_info_file_, "%g,", reward);
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%g,", q_[i]);
+        }
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%zu", num_action_chosen_[i]);
+            if (i != num_available_actions_ - 1) {
+                fprintf(agent_info_file_, ",");
+            }
+        }
+        fprintf(agent_info_file_, "\n");
+    }
 }
 
 void UCB1_Agent::set_c(float c) {
@@ -743,8 +805,7 @@ void UCB1_Agent::set_step(float gamma, int move_lim) {
         //
         //     alpha = 1 - e^(log(gamma) / K)
         //
-        float alpha = 1 - std::exp(std::log(gamma) / move_lim);
-        exp_alpha_ = alpha;
+        exp_alpha_ = gamma;
     }
 }
 
@@ -773,9 +834,20 @@ void UCB1_Agent::update_q() {
         // f(t) = t
         //q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i]);
         // f(t) = 1 + t * log(t)^2
+        /* UCB1-TUNED
         float V = sum_reward_square_[i] / num_action_chosen_[i] - std::pow(sum_reward_[i] / num_action_chosen_[i], 2) + std::sqrt(2 * std::log(t_) / num_action_chosen_[i]);
         V = std::min(V, float(0.25));
         q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i] * V);
+        */
+        /*
+        SW-UCB
+        */
+        if (SW_num_action_chosen_[i] == 0) {
+            q_[i] = std::numeric_limits<float>::max();
+        }
+        else {
+            q_[i] = sum_reward_[i] / SW_num_action_chosen_[i] + std::sqrt(std::log(std::min((int) t_, (int) SW_count_)) * exp_alpha_ / SW_num_action_chosen_[i]);
+        }
     }
 }
 
@@ -799,7 +871,10 @@ void EXP3Agent::process_outcome(double reward, e_reward_function reward_fun) {
     } else {
         VTR_ASSERT_MSG(false, "Invalid step size");
     }
-    reward = reward * step;
+    reward = reward * 10000 * step;
+    if (reward == 0.) {
+        reward = -0.000000001 * 10000;
+    }
     w_[last_action_] = w_[last_action_] * std::exp(gamma_ * reward / action_prob_[last_action_] / num_available_actions_); // EXP3
     /*
     //Based on the outcome how much should our estimate of q change?

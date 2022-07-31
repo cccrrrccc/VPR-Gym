@@ -133,6 +133,8 @@ class UCBAgent : public KArmedBanditAgent {
 
   private:
     float c_ = 0.01;
+    std::vector<float> Decay_N_;
+    float max_reward_;
 };
 
 /**
@@ -156,6 +158,10 @@ class UCB1_Agent : public KArmedBanditAgent {
 
   private:
     float c_ = 0.01;
+    std::vector<float> SW_reward_;
+    std::vector<size_t> SW_action_;
+    std::vector<size_t> SW_num_action_chosen_;
+    int SW_count_;
 };
 
 class EXP3Agent : public KArmedBanditAgent {
@@ -170,7 +176,6 @@ class EXP3Agent : public KArmedBanditAgent {
     void set_step(float gamma, int move_lim);
 
   private:
-    float c_ = 0.01;
     std::vector<float> w_;
     float gamma_;
     std::vector<float> exp_q_;            //The clipped and scaled exponential of the estimated Q value for each action
