@@ -911,7 +911,9 @@ enum e_agent_algorithm {
     E_DECAY,
     UCB,
     UCB_1,
-    EXP3
+    EXP3,
+    UCBC,
+    MOSS
 };
 
 ///@brief Used to calculate the inner placer loop's block swapping limit move_lim.

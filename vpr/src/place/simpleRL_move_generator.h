@@ -34,6 +34,7 @@ class KArmedBanditAgent {
     std::vector<float> sum_reward_square_;       //The sum of reward's square
     //FILE* agent_info_file_ = fopen("agent.txt", "w");
     FILE* agent_info_file_ = NULL;
+    
 };
 
 /**
@@ -162,6 +163,7 @@ class UCB1_Agent : public KArmedBanditAgent {
     std::vector<size_t> SW_action_;
     std::vector<size_t> SW_num_action_chosen_;
     int SW_count_;
+    float max_reward_;
 };
 
 class EXP3Agent : public KArmedBanditAgent {
@@ -181,6 +183,45 @@ class EXP3Agent : public KArmedBanditAgent {
     std::vector<float> exp_q_;            //The clipped and scaled exponential of the estimated Q value for each action
     std::vector<float> action_prob_;      //The probability of choosing each action
     std::vector<float> cumm_action_prob_; //The accumulative probability of choosing each action
+};
+
+class UCBCAgent : public KArmedBanditAgent {
+  public:
+    UCBCAgent(size_t num_actions, float c);
+    ~UCBCAgent();
+
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
+    size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
+  public:
+    void set_step(float gamma, int move_lim);
+    void update_q();
+
+  private:
+    float c_ = 0.01;
+    std::vector<float> decay_N_;
+    float max_reward_;
+    size_t num_availabel_clusters_;
+    std::vector<float> q_cluster_;
+    std::vector<std::vector<float>> q_arm_;
+    std::vector<std::vector<int>> cluster_information_;
+};
+
+class MOSSAgent : public KArmedBanditAgent {
+  public:
+    MOSSAgent(size_t num_actions, float c);
+    ~MOSSAgent();
+
+    void process_outcome(double reward, e_reward_function reward_fun) override; //Updates the agent based on the reward of the last proposed action
+    size_t propose_action() override; //Returns the type of the next action the agent wishes to perform
+  public:
+    void set_step(float gamma, int move_lim);
+    void set_c(float c);
+    void update_q();
+
+  private:
+    float c_ = 0.01;
+    std::vector<float> Decay_N_;
+    float max_reward_;
 };
 
 /**
@@ -203,6 +244,9 @@ class SimpleRLMoveGenerator : public MoveGenerator {
     SimpleRLMoveGenerator(std::unique_ptr<UCBAgent>& agent);
     SimpleRLMoveGenerator(std::unique_ptr<UCB1_Agent>& agent);
     SimpleRLMoveGenerator(std::unique_ptr<EXP3Agent>& agent);
+    SimpleRLMoveGenerator(std::unique_ptr<UCBCAgent>& agent);
+    SimpleRLMoveGenerator(std::unique_ptr<MOSSAgent>& agent);
+
 
     // Updates affected_blocks with the proposed move, while respecting the current rlim
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);

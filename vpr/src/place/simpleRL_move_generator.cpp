@@ -89,9 +89,36 @@ SimpleRLMoveGenerator::SimpleRLMoveGenerator(std::unique_ptr<EXP3Agent>& agent) 
     karmed_bandit_agent = std::move(agent);
 }
 
+SimpleRLMoveGenerator::SimpleRLMoveGenerator(std::unique_ptr<UCBCAgent>& agent) {
+    avail_moves.push_back(std::move(std::make_unique<UniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<MedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedCentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedMedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CriticalUniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<FeasibleRegionMoveGenerator>()));
+
+    karmed_bandit_agent = std::move(agent);
+}
+
+
+SimpleRLMoveGenerator::SimpleRLMoveGenerator(std::unique_ptr<MOSSAgent>& agent) {
+    avail_moves.push_back(std::move(std::make_unique<UniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<MedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedCentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedMedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CriticalUniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<FeasibleRegionMoveGenerator>()));
+
+    karmed_bandit_agent = std::move(agent);
+}
+
 e_create_move SimpleRLMoveGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities) {
+    auto& cluster_ctx = g_vpr_ctx.clustering(); 
     move_type = (e_move_type)karmed_bandit_agent->propose_action();
-    return avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
+    e_create_move move = avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
+    return move;
 }
 
 void SimpleRLMoveGenerator::process_outcome(double reward, e_reward_function reward_fun) {
@@ -534,6 +561,9 @@ UCBAgent::UCBAgent(size_t num_actions, float c) {
     Decay_N_ = std::vector<float>(num_actions, 0.);
     t_ = 0;
     max_reward_ = 0;
+    if (num_available_actions_ == NUM_PL_MOVE_TYPES) {
+        //c_ = c_ / 10; // change from 1000 to 200
+    }
     if (agent_info_file_) {
         fprintf(agent_info_file_, "action,reward,");
         for (size_t i = 0; i < num_available_actions_; ++i) {
@@ -558,15 +588,16 @@ void UCBAgent::process_outcome(double reward, e_reward_function reward_fun) {
         reward /= time_elapsed_[last_action_];
     //Determine step size
     float step = 0.;
-    if (reward > max_reward_) {
-        max_reward_ = reward;
-    }
     if (exp_alpha_ < 0.) {
         step = 1. / num_action_chosen_[last_action_]; //Incremental average
     } else if (exp_alpha_ <= 1) {
         step = exp_alpha_; //Exponentially wieghted average
     } else {
         VTR_ASSERT_MSG(false, "Invalid step size");
+    }
+    max_reward_ = max_reward_ * step;
+    if (reward > max_reward_) {
+        max_reward_ = reward;
     }
 
     //Based on the outcome how much should our estimate of q change?
@@ -582,9 +613,11 @@ void UCBAgent::process_outcome(double reward, e_reward_function reward_fun) {
         sum_reward_[i] = sum_reward_[i] * step;
         Decay_N_[i] = Decay_N_[i] * step;
     }
+    
     if (max_reward_ != 0) {
         reward = reward / max_reward_;
     }
+    
     sum_reward_[last_action_] += reward;
     Decay_N_[last_action_] += 1;
     //sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
@@ -669,12 +702,12 @@ void UCBAgent::update_q() {
         decay_t_ += Decay_N_[i];
     }
     for (size_t i = 0; i < num_available_actions_; i++) {
-        // f(t) = t
-        //q_[i] = sum_reward_[i] / num_action_chosen_[i] + c_ * std::sqrt(std::log(t_) / num_action_chosen_[i]);
-        // f(t) = 1 + t * log(t)^2
-        //float mean = sum_reward_[i] / Decay_N_[i];
-        //float V_ = std::max(mean*(1-mean), float(0.002));
-        q_[i] = sum_reward_[i] / Decay_N_[i] + std::sqrt(c_ * std::log(decay_t_) /  Decay_N_[i]);
+        //q_[i] = sum_reward_[i] / Decay_N_[i] + c_ * std::sqrt(std::log(decay_t_) /  Decay_N_[i]); // normal UCB
+        // MOSS
+        float log_N = std::log(decay_t_ / Decay_N_[i] / num_available_actions_);
+        if (log_N <= 0)
+            log_N = 0;
+        q_[i] = sum_reward_[i] / Decay_N_[i] + c_ * std::sqrt((log_N / Decay_N_[i]));
     }
 }
 
@@ -694,6 +727,7 @@ UCB1_Agent::UCB1_Agent(size_t num_actions, float c) {
     SW_action_ = std::vector<size_t>((int) c_, (size_t) 0);
     SW_num_action_chosen_ = std::vector<size_t>(num_actions, 0);
     SW_count_ = 0;
+    max_reward_ = 0;
     t_ = 0;
 
     if (agent_info_file_) {
@@ -730,6 +764,13 @@ void UCB1_Agent::process_outcome(double reward, e_reward_function reward_fun) {
         VTR_ASSERT_MSG(false, "Invalid step size");
     }
 
+    if (reward > max_reward_) {
+        max_reward_ = reward;
+    }
+
+    if (max_reward_ != 0) {
+        reward = reward / max_reward_;
+    }
     // Update the sum of reward
     //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
     // Step mode
@@ -846,7 +887,7 @@ void UCB1_Agent::update_q() {
             q_[i] = std::numeric_limits<float>::max();
         }
         else {
-            q_[i] = sum_reward_[i] / SW_num_action_chosen_[i] + std::sqrt(std::log(std::min((int) t_, (int) SW_count_)) * exp_alpha_ / SW_num_action_chosen_[i]);
+            q_[i] = sum_reward_[i] / SW_num_action_chosen_[i] + exp_alpha_ * std::sqrt(std::log(std::min((int) t_, (int) SW_count_)) / SW_num_action_chosen_[i]);
         }
     }
 }
@@ -989,5 +1030,384 @@ void EXP3Agent::set_step(float gamma, int move_lim) {
         //
         float alpha = 1 - std::exp(std::log(gamma) / move_lim);
         exp_alpha_ = alpha;
+    }
+}
+
+/*                                  *
+ *                                  *
+ *  UCBC     agent implementation   *
+ *                                  *
+ *                                  */
+UCBCAgent::UCBCAgent(size_t num_actions, float c) {
+    c_ = c;
+    num_available_actions_ = num_actions;
+
+    /*
+    Cluster
+    */
+    if (num_available_actions_== NUM_PL_1ST_STATE_MOVE_TYPES) {
+        num_availabel_clusters_ = 4;
+        q_cluster_ = std::vector<float>(num_availabel_clusters_, 0.);
+        q_arm_.push_back({0.}); // Random(0)
+        q_arm_.push_back({0.}); // Med.(1) Cen.(2)
+        q_arm_.push_back({0.}); // W. CeN(3)
+        q_arm_.push_back({0.});
+        cluster_information_.push_back({0});
+        cluster_information_.push_back({1});
+        cluster_information_.push_back({2});
+        cluster_information_.push_back({3});
+    }
+    else if (num_available_actions_ == NUM_PL_MOVE_TYPES) {
+        //c_ = c_ / 10;
+        num_availabel_clusters_ = 4;
+        q_cluster_ = std::vector<float>(num_availabel_clusters_, 0.);
+        q_arm_.push_back({0., 0.}); // Random(0)
+        q_arm_.push_back({0., 0.}); // Med.(1) Cen.(2)
+        q_arm_.push_back({0., 0.}); // C.R(5) F.R(6)
+        q_arm_.push_back({0.}); // W CeN(3) W Med(4)
+        cluster_information_.push_back({0, 5});
+        cluster_information_.push_back({1, 4});
+        cluster_information_.push_back({2, 3});
+        cluster_information_.push_back({6});
+    }
+    else {
+        VTR_ASSERT_MSG(false, "Unsupported cluster size");
+    }
+    sum_reward_ = std::vector<float>(num_actions, 0.);
+    num_action_chosen_ = std::vector<size_t>(num_actions, 0);
+    decay_N_ = std::vector<float>(num_actions, 0.);
+    t_ = 0;
+    max_reward_ = 0;
+    if (agent_info_file_) {
+        fprintf(agent_info_file_, "action,reward,");
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "q%zu,", i);
+        }
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "n%zu,", i);
+        }
+        fprintf(agent_info_file_, "\n");
+        fprintf(agent_info_file_, "step");
+    }
+}
+
+UCBCAgent::~UCBCAgent() {
+    if (agent_info_file_) vtr::fclose(agent_info_file_);
+}
+
+void UCBCAgent::process_outcome(double reward, e_reward_function reward_fun) {
+    ++num_action_chosen_[last_action_];
+    t_++;
+    if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
+        reward /= time_elapsed_[last_action_];
+    //Determine step size
+    float step = 0.;
+    if (exp_alpha_ < 0.) {
+        step = 1. / num_action_chosen_[last_action_]; //Incremental average
+    } else if (exp_alpha_ <= 1) {
+        step = exp_alpha_; //Exponentially wieghted average
+    } else {
+        VTR_ASSERT_MSG(false, "Invalid step size");
+    }
+    /*
+    max_reward_ = max_reward_ * step;
+    if (reward > max_reward_) {
+        max_reward_ = reward;
+    }
+    */
+    //Based on the outcome how much should our estimate of q change?
+    //float delta_q = step * (reward - q_[last_action_]);
+
+    //Update the estimated value of the last action
+    //q_[last_action_] += delta_q;
+
+    // Update the sum of reward
+    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
+    // Step mode
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        sum_reward_[i] = sum_reward_[i] * step;
+        decay_N_[i] = decay_N_[i] * step;
+    }
+    /*
+    if (max_reward_ != 0) {
+        reward = reward / max_reward_;
+    }
+    */
+    sum_reward_[last_action_] += reward;
+    decay_N_[last_action_] += 1;
+    //sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
+    if (agent_info_file_) {
+        fprintf(agent_info_file_, "%zu,", last_action_);
+        fprintf(agent_info_file_, "%g,", reward);
+
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%g,", sum_reward_[i]);
+        }
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%zu", num_action_chosen_[i]);
+            if (i != num_available_actions_ - 1) {
+                fprintf(agent_info_file_, ",");
+            }
+        }
+        fprintf(agent_info_file_,",%g", step);
+        fprintf(agent_info_file_, "\n");
+    }
+}
+
+void UCBCAgent::set_step(float gamma, int move_lim) {
+    VTR_LOG("Setting decay step: %g\n", exp_alpha_);
+    if (gamma < 0) {
+        exp_alpha_ = -1; //Use sample average
+    } else {
+        //
+        // For an exponentially wieghted average the fraction of total weight applied to
+        // to moves which occured > K moves ago is:
+        //
+        //      gamma = (1 - alpha)^K
+        //
+        // If we treat K as the number of moves per temperature (move_lim) then gamma
+        // is the fraction of weight applied to moves which occured > move_lim moves ago,
+        // and given a target gamma we can explicitly calcualte the alpha step-size
+        // required by the agent:
+        //
+        //     alpha = 1 - e^(log(gamma) / K)
+        //
+        /*
+        float alpha = 1 - std::exp(std::log(gamma) / move_lim);
+        exp_alpha_ = alpha;
+        */
+        VTR_LOG("move_lim: %g\n", move_lim);
+        exp_alpha_ = gamma;
+    }
+}
+
+// choose an action
+size_t UCBCAgent::propose_action() {
+    size_t action = 0;
+    size_t cluster = 0;
+    if (t_ < num_available_actions_) {
+        action = t_;
+        last_action_ = action;
+        return action;
+    }
+    else {
+        // Find the max q value
+        update_q();
+        /*
+        std::vector<float> p_ = std::vector<float>(num_available_actions_, 0.);;
+        for (size_t i = 0; i < num_available_actions_; i++) {
+            p_[i] = q_[i] + c_ * std::sqrt(std::log(t_ * std::pow(std::log(t_), 2) + 1) / num_action_chosen_[i]);
+        }*/
+        auto itr = std::max_element(q_cluster_.begin(), q_cluster_.end());
+        VTR_ASSERT(itr != q_cluster_.end());
+        cluster = itr - q_cluster_.begin();
+
+        if (cluster_information_[cluster].size() == 1) {
+            action = cluster_information_[cluster][0];
+        }
+        else {
+            auto itr2 = std::max_element(q_arm_[cluster].begin(), q_arm_[cluster].end());
+            VTR_ASSERT(itr2 != q_arm_[cluster].end());
+            action = cluster_information_[cluster][itr2 - q_arm_[cluster].begin()];
+        }
+    }
+    VTR_ASSERT(action < num_available_actions_);
+
+    last_action_ = action;
+    return action;
+}
+
+//Update UCB values
+void UCBCAgent::update_q() {
+    float decay_t_ = 0;
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        decay_t_ += decay_N_[i];
+    }
+
+    // Update cluster's q value
+    for (size_t i = 0; i < num_availabel_clusters_; i++) {
+        float cluster_reward = 0.;
+        float cluster_N_ = 0.;
+        // Calculate the cluster's reward and number
+        for (size_t j = 0; j < cluster_information_[i].size(); j++) {
+            // cluster_information_[i] contains the information of the i-th cluster
+            // cluster_information_[i][j] is the j-th action in the i-th cluster
+            cluster_reward += sum_reward_[cluster_information_[i][j]];
+            cluster_N_ += decay_N_[cluster_information_[i][j]];
+        }
+        q_cluster_[i] = cluster_reward / cluster_N_ + c_ * std::sqrt(2 * std::log(decay_t_) /  cluster_N_);
+        for (size_t j = 0; j < cluster_information_[i].size(); j++) {
+            // cluster_information_[i] contains the information of the i-th cluster
+            // cluster_information_[i][j] is the j-th action in the i-th cluster
+            // q_arm_[i][j] is the q value of the j-th action in the i-th cluster
+            int action = cluster_information_[i][j];
+            q_arm_[i][j] = sum_reward_[action] / decay_N_[action] + c_ * std::sqrt(2 * std::log(decay_t_) / decay_N_[action]);
+        }
+    }
+}
+
+/*                                  *
+ *                                  *
+ *  UCB     agent implementation    *
+ *                                  *
+ *                                  */
+MOSSAgent::MOSSAgent(size_t num_actions, float c) {
+    set_c(c);
+    num_available_actions_ = num_actions;
+    q_ = std::vector<float>(num_actions, 0.);
+    sum_reward_ = std::vector<float>(num_actions, 0.);
+    sum_reward_square_ = std::vector<float>(num_actions, 0.);
+    num_action_chosen_ = std::vector<size_t>(num_actions, 0);
+    Decay_N_ = std::vector<float>(num_actions, 0.);
+    t_ = 0;
+    max_reward_ = 0;
+    if (num_available_actions_ == NUM_PL_MOVE_TYPES) {
+        //c_ = c_ / 10; // change from 1000 to 200
+    }
+    if (agent_info_file_) {
+        fprintf(agent_info_file_, "action,reward,");
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "q%zu,", i);
+        }
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "n%zu,", i);
+        }
+        fprintf(agent_info_file_, "\n");
+        fprintf(agent_info_file_, "step");
+    }
+}
+
+MOSSAgent::~MOSSAgent() {
+    if (agent_info_file_) vtr::fclose(agent_info_file_);
+}
+
+void MOSSAgent::process_outcome(double reward, e_reward_function reward_fun) {
+    ++num_action_chosen_[last_action_];
+    t_++;
+    if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
+        reward /= time_elapsed_[last_action_];
+    //Determine step size
+    float step = 0.;
+    if (exp_alpha_ < 0.) {
+        step = 1. / num_action_chosen_[last_action_]; //Incremental average
+    } else if (exp_alpha_ <= 1) {
+        step = exp_alpha_; //Exponentially wieghted average
+    } else {
+        VTR_ASSERT_MSG(false, "Invalid step size");
+    }
+    max_reward_ = max_reward_ * step;
+    if (reward > max_reward_) {
+        max_reward_ = reward;
+    }
+
+    //Based on the outcome how much should our estimate of q change?
+    //float delta_q = step * (reward - q_[last_action_]);
+
+    //Update the estimated value of the last action
+    //q_[last_action_] += delta_q;
+
+    // Update the sum of reward
+    //sum_reward_[last_action_] = sum_reward_[last_action_] + reward;
+    // Step mode
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        sum_reward_[i] = sum_reward_[i] * step;
+        Decay_N_[i] = Decay_N_[i] * step;
+    }
+    
+    if (max_reward_ != 0) {
+        reward = reward / max_reward_;
+    }
+    
+    sum_reward_[last_action_] += reward;
+    Decay_N_[last_action_] += 1;
+    //sum_reward_square_[last_action_] = sum_reward_square_[last_action_] + std::pow(reward * step, 2);
+    if (agent_info_file_) {
+        fprintf(agent_info_file_, "%zu,", last_action_);
+        fprintf(agent_info_file_, "%g,", reward);
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%g,", q_[i]);
+        }
+
+        for (size_t i = 0; i < num_available_actions_; ++i) {
+            fprintf(agent_info_file_, "%zu", num_action_chosen_[i]);
+            if (i != num_available_actions_ - 1) {
+                fprintf(agent_info_file_, ",");
+            }
+        }
+        fprintf(agent_info_file_,",%g", step);
+        fprintf(agent_info_file_, "\n");
+    }
+}
+
+void MOSSAgent::set_c(float c) {
+    c_ = c;
+}
+
+void MOSSAgent::set_step(float gamma, int move_lim) {
+    VTR_LOG("Setting decay step: %g\n", exp_alpha_);
+    if (gamma < 0) {
+        exp_alpha_ = -1; //Use sample average
+    } else {
+        //
+        // For an exponentially wieghted average the fraction of total weight applied to
+        // to moves which occured > K moves ago is:
+        //
+        //      gamma = (1 - alpha)^K
+        //
+        // If we treat K as the number of moves per temperature (move_lim) then gamma
+        // is the fraction of weight applied to moves which occured > move_lim moves ago,
+        // and given a target gamma we can explicitly calcualte the alpha step-size
+        // required by the agent:
+        //
+        //     alpha = 1 - e^(log(gamma) / K)
+        //
+        /*
+        float alpha = 1 - std::exp(std::log(gamma) / move_lim);
+        exp_alpha_ = alpha;
+        */
+        VTR_LOG("move_lim: %g\n", move_lim);
+        exp_alpha_ = gamma;
+    }
+}
+
+// choose an action
+size_t MOSSAgent::propose_action() {
+    size_t action = 0;
+    if (t_ < num_available_actions_) {
+        action = t_;
+    }
+    else {
+        // Find the max q value
+        update_q();
+        /*
+        std::vector<float> p_ = std::vector<float>(num_available_actions_, 0.);;
+        for (size_t i = 0; i < num_available_actions_; i++) {
+            p_[i] = q_[i] + c_ * std::sqrt(std::log(t_ * std::pow(std::log(t_), 2) + 1) / num_action_chosen_[i]);
+        }*/
+        auto itr = std::max_element(q_.begin(), q_.end());
+        VTR_ASSERT(itr != q_.end());
+        action = itr - q_.begin();
+    }
+    VTR_ASSERT(action < num_available_actions_);
+
+    last_action_ = action;
+    return action;
+}
+
+//Update UCB values
+void MOSSAgent::update_q() {
+    float decay_t_ = 0;
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        decay_t_ += Decay_N_[i];
+    }
+    for (size_t i = 0; i < num_available_actions_; i++) {
+        // MOSS
+        float log_N = std::log(decay_t_ / Decay_N_[i] / num_available_actions_);
+        if (log_N <= 0)
+            log_N = 0;
+        q_[i] = sum_reward_[i] / Decay_N_[i] + c_ * std::sqrt((log_N / Decay_N_[i]));
     }
 }
