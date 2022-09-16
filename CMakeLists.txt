@@ -93,6 +93,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
 
+
 #
 # Interprocedural optimization
 #
@@ -123,6 +124,8 @@ endif()
 #
 
 set(EXTRA_FLAGS "")
+
+
 if(VPR_ENABLE_INTERCHANGE)
     set(EXTRA_FLAGS "-lz")
 endif()

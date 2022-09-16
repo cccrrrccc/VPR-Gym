@@ -456,6 +456,7 @@ void try_place(const t_placer_opts& placer_opts,
     std::unique_ptr<PlaceDelayModel> place_delay_model;
     std::unique_ptr<MoveGenerator> move_generator;
     std::unique_ptr<MoveGenerator> move_generator2;
+    std::unique_ptr<MoveGenerator> gym_generator;
     std::unique_ptr<ManualMoveGenerator> manual_move_generator;
     std::unique_ptr<PlacerSetupSlacks> placer_setup_slacks;
 
@@ -494,6 +495,10 @@ void try_place(const t_placer_opts& placer_opts,
 
     //create the move generator based on the chosen strategy
     create_move_generators(move_generator, move_generator2, placer_opts, move_lim);
+
+    if (placer_opts.RL_gym_placement == true) {
+        create_gym_generator(gym_generator, placer_opts, move_lim, NUM_PL_MOVE_TYPES);
+    }
 
     width_fac = placer_opts.place_chan_width;
 
@@ -781,23 +786,36 @@ void try_place(const t_placer_opts& placer_opts,
                 }
             }
 
-            //move the appropoiate move_generator to be the current used move generator
-            assign_current_move_generator(move_generator, move_generator2,
-                                          agent_state, placer_opts, false, current_move_generator);
+            if (placer_opts.RL_gym_placement == false) {
+                //move the appropoiate move_generator to be the current used move generator
+                assign_current_move_generator(move_generator, move_generator2,
+                                              agent_state, placer_opts, false, current_move_generator);
 
-            //do a complete inner loop iteration
-            placement_inner_loop(&state, placer_opts, inner_recompute_limit,
-                                 &stats, &costs, &moves_since_cost_recompute,
-                                 pin_timing_invalidator.get(), place_delay_model.get(),
-                                 placer_criticalities.get(), placer_setup_slacks.get(),
-                                 *current_move_generator, *manual_move_generator,
-                                 blocks_affected, timing_info.get(),
-                                 placer_opts.place_algorithm, move_type_stat,
-                                 timing_bb_factor);
+                //do a complete inner loop iteration
+                placement_inner_loop(&state, placer_opts, inner_recompute_limit,
+                                     &stats, &costs, &moves_since_cost_recompute,
+                                     pin_timing_invalidator.get(), place_delay_model.get(),
+                                     placer_criticalities.get(), placer_setup_slacks.get(),
+                                     *current_move_generator, *manual_move_generator,
+                                     blocks_affected, timing_info.get(),
+                                     placer_opts.place_algorithm, move_type_stat,
+                                     timing_bb_factor);
 
-            //move the update used move_generator to its original variable
-            update_move_generator(move_generator, move_generator2, agent_state,
-                                  placer_opts, false, current_move_generator);
+                //move the update used move_generator to its original variable
+                update_move_generator(move_generator, move_generator2, agent_state,
+                                      placer_opts, false, current_move_generator);
+            }
+            else {
+                // Use RL Gym
+                placement_inner_loop(&state, placer_opts, inner_recompute_limit,
+                                     &stats, &costs, &moves_since_cost_recompute,
+                                     pin_timing_invalidator.get(), place_delay_model.get(),
+                                     placer_criticalities.get(), placer_setup_slacks.get(),
+                                     *gym_generator, *manual_move_generator,
+                                     blocks_affected, timing_info.get(),
+                                     placer_opts.place_algorithm, move_type_stat,
+                                     timing_bb_factor);
+            }
 
             tot_iter += state.move_lim;
             ++state.num_temps;
@@ -843,24 +861,36 @@ void try_place(const t_placer_opts& placer_opts,
                                       placer_setup_slacks.get(), pin_timing_invalidator.get(),
                                       timing_info.get());
 
-        //move the appropoiate move_generator to be the current used move generator
-        assign_current_move_generator(move_generator, move_generator2,
-                                      agent_state, placer_opts, true, current_move_generator);
+        if (placer_opts.RL_gym_placement == false) {
+            //move the appropoiate move_generator to be the current used move generator
+            assign_current_move_generator(move_generator, move_generator2,
+                                          agent_state, placer_opts, true, current_move_generator);
 
-        /* Run inner loop again with temperature = 0 so as to accept only swaps
-         * which reduce the cost of the placement */
-        placement_inner_loop(&state, placer_opts, quench_recompute_limit,
-                             &stats, &costs, &moves_since_cost_recompute,
-                             pin_timing_invalidator.get(), place_delay_model.get(),
-                             placer_criticalities.get(), placer_setup_slacks.get(),
-                             *current_move_generator, *manual_move_generator,
-                             blocks_affected, timing_info.get(),
-                             placer_opts.place_quench_algorithm, move_type_stat,
-                             timing_bb_factor);
+            /* Run inner loop again with temperature = 0 so as to accept only swaps
+             * which reduce the cost of the placement */
+            placement_inner_loop(&state, placer_opts, quench_recompute_limit,
+                                 &stats, &costs, &moves_since_cost_recompute,
+                                 pin_timing_invalidator.get(), place_delay_model.get(),
+                                 placer_criticalities.get(), placer_setup_slacks.get(),
+                                 *current_move_generator, *manual_move_generator,
+                                 blocks_affected, timing_info.get(),
+                                 placer_opts.place_quench_algorithm, move_type_stat,
+                                 timing_bb_factor);
 
-        //move the update used move_generator to its original variable
-        update_move_generator(move_generator, move_generator2, agent_state,
-                              placer_opts, true, current_move_generator);
+            //move the update used move_generator to its original variable
+            update_move_generator(move_generator, move_generator2, agent_state,
+                                  placer_opts, true, current_move_generator);
+        }
+        else {
+            placement_inner_loop(&state, placer_opts, quench_recompute_limit,
+                                 &stats, &costs, &moves_since_cost_recompute,
+                                 pin_timing_invalidator.get(), place_delay_model.get(),
+                                 placer_criticalities.get(), placer_setup_slacks.get(),
+                                 *gym_generator, *manual_move_generator,
+                                 blocks_affected, timing_info.get(),
+                                 placer_opts.place_quench_algorithm, move_type_stat,
+                                 timing_bb_factor);
+        }
 
         tot_iter += state.move_lim;
         ++state.num_temps;
@@ -875,7 +905,7 @@ void try_place(const t_placer_opts& placer_opts,
                            critical_path.delay(), sTNS, sWNS, tot_iter);
     }
     auto post_quench_timing_stats = timing_ctx.stats;
-
+    delete_gym_generator(gym_generator);
     //Final timing analysis
     PlaceCritParams crit_params;
     crit_params.crit_exponent = state.crit_exponent;
@@ -1355,6 +1385,7 @@ static e_move_result try_swap(const t_annealing_state* state,
 #endif //NO_GRAPHICS
     } else {
         //Generate a new move (perturbation) used to explore the space of possible placements
+        //blocks_affected and move_type are empty here
         create_move_outcome = move_generator.propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
     }
 

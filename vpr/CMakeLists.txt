@@ -84,6 +84,7 @@ target_link_libraries(libvpr
                         libargparse
                         libpugixml
                         librrgraph
+                        zmq
 )
 
 #link graphics library only when graphics set to on

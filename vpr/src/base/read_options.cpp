@@ -1978,6 +1978,13 @@ argparse::ArgumentParser create_arg_parser(std::string prog_name, t_options& arg
         .default_value("on")
         .show_in(argparse::ShowIn::HELP_ONLY);
 
+    place_grp.add_argument<bool, ParseOnOff>(args.RL_gym_placement, "--RL_gym_placement")
+        .help(
+            "Uses a Reinforcement Learning (RL) gym in choosing the appropiate move type in placement."
+            "It communicate with python OpenAIGym class and get action from python")
+        .default_value("off")
+        .show_in(argparse::ShowIn::HELP_ONLY);
+
     place_grp.add_argument<bool, ParseOnOff>(args.place_agent_multistate, "--place_agent_multistate")
         .help(
             "Enable multistate agent. "

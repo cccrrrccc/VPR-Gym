@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
+#include <zmq.hpp>
 #include <limits>
+#include <string>
 
 #include "vtr_random.h"
 
@@ -124,6 +126,51 @@ e_create_move SimpleRLMoveGenerator::propose_move(t_pl_blocks_to_be_moved& block
 void SimpleRLMoveGenerator::process_outcome(double reward, e_reward_function reward_fun) {
     karmed_bandit_agent->process_outcome(reward, reward_fun);
 }
+
+RLGymGenerator::RLGymGenerator(size_t num_actions)
+    : socket(ctx, ZMQ_REQ)
+{
+    avail_moves.push_back(std::move(std::make_unique<UniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<MedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedCentroidMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<WeightedMedianMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<CriticalUniformMoveGenerator>()));
+    avail_moves.push_back(std::move(std::make_unique<FeasibleRegionMoveGenerator>()));
+
+    socket.bind("tcp://*:5555");
+    zmq::message_t msg(std::to_string((int) num_actions)); // Send the width of search space to RL gym
+    socket.send(msg, zmq::send_flags::none);
+}
+
+RLGymGenerator::~RLGymGenerator() {
+    zmq::message_t msg("end", 3);
+    zmq::message_t reply;
+    socket.recv(reply, zmq::recv_flags::none);
+    socket.send(msg, zmq::send_flags::none);
+    //socket.disconnect("tcp://*:5555");
+}
+
+e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities) {
+    zmq::message_t msg;
+    socket.recv(msg, zmq::recv_flags::none);
+    std::string str = msg.to_string();
+    size_t action = (size_t) std::stoi(str);
+    last_action_ = action;
+
+    auto& cluster_ctx = g_vpr_ctx.clustering(); 
+    move_type = (e_move_type) action;
+    e_create_move move = avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
+    return move;
+}
+
+void RLGymGenerator::process_outcome(double reward, e_reward_function reward_fun) {
+    if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
+        reward /= time_elapsed_[last_action_];
+    zmq::message_t msg(std::to_string(reward));
+    socket.send(msg, zmq::send_flags::none);
+}
+
 
 /*                                        *
  *                                        *
@@ -1046,16 +1093,16 @@ UCBCAgent::UCBCAgent(size_t num_actions, float c) {
     Cluster
     */
     if (num_available_actions_== NUM_PL_1ST_STATE_MOVE_TYPES) {
-        num_availabel_clusters_ = 4;
+        num_availabel_clusters_ = 3;
         q_cluster_ = std::vector<float>(num_availabel_clusters_, 0.);
         q_arm_.push_back({0.}); // Random(0)
         q_arm_.push_back({0.}); // Med.(1) Cen.(2)
-        q_arm_.push_back({0.}); // W. CeN(3)
-        q_arm_.push_back({0.});
+        q_arm_.push_back({0., 0.}); // W. CeN(3)
+        //q_arm_.push_back({0.});
         cluster_information_.push_back({0});
         cluster_information_.push_back({1});
-        cluster_information_.push_back({2});
-        cluster_information_.push_back({3});
+        cluster_information_.push_back({2, 3});
+        //cluster_information_.push_back({3});
     }
     else if (num_available_actions_ == NUM_PL_MOVE_TYPES) {
         //c_ = c_ / 10;
@@ -1065,10 +1112,10 @@ UCBCAgent::UCBCAgent(size_t num_actions, float c) {
         q_arm_.push_back({0., 0.}); // Med.(1) Cen.(2)
         q_arm_.push_back({0., 0.}); // C.R(5) F.R(6)
         q_arm_.push_back({0.}); // W CeN(3) W Med(4)
-        cluster_information_.push_back({0, 5});
+        cluster_information_.push_back({6, 5});
         cluster_information_.push_back({1, 4});
         cluster_information_.push_back({2, 3});
-        cluster_information_.push_back({6});
+        cluster_information_.push_back({0});
     }
     else {
         VTR_ASSERT_MSG(false, "Unsupported cluster size");
@@ -1411,3 +1458,4 @@ void MOSSAgent::update_q() {
         q_[i] = sum_reward_[i] / Decay_N_[i] + c_ * std::sqrt((log_N / Decay_N_[i]));
     }
 }
+

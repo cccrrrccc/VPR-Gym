@@ -9,6 +9,7 @@
 #include "critical_uniform_move_generator.h"
 #include "centroid_move_generator.h"
 #include <stdio.h>
+#include <zmq.hpp>
 
 /**
  * @brief KArmedBanditAgent is the base class for RL agents that target the k-armed bandit problems
@@ -17,7 +18,8 @@ class KArmedBanditAgent {
   public:
     virtual ~KArmedBanditAgent() {}
     virtual size_t propose_action() = 0;
-    virtual void process_outcome(double reward, e_reward_function reward_fun) {}
+    virtual void process_outcome(double reward, e_reward_function reward_fun) {
+    }
 
   protected:
     float exp_alpha_ = -1;                  //Step size for q_ updates (< 0 implies use incremental average)
@@ -254,4 +256,28 @@ class SimpleRLMoveGenerator : public MoveGenerator {
     // Recieves feedback about the outcome of the previously proposed move
     void process_outcome(double reward, e_reward_function reward_fun);
 };
+
+/**
+ * @brief This class represents the move generator that communicate with RL gym
+ * 
+ * It is a derived class from MoveGenerator that utilizes a RL gym to
+ * dynamically select the optimal probability of each action (move type)
+ * 
+ */
+class RLGymGenerator: public MoveGenerator {
+  private:
+    std::vector<std::unique_ptr<MoveGenerator>> avail_moves; // list of pointers to the available move generators (the different move types)
+    zmq::context_t ctx;
+    zmq::socket_t socket;
+    size_t last_action_ = 0;
+    std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
+    size_t num_available_actions_;
+  public:
+    RLGymGenerator(size_t num_actions);
+    ~RLGymGenerator();
+    e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
+    void process_outcome(double reward, e_reward_function reward_fun);
+};
+
+
 #endif

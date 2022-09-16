@@ -600,7 +600,7 @@ struct t_pl_loc {
         , y(yloc)
         , sub_tile(sub_tile_loc) {}
 
-    int x = OPEN;
+    int x = OPEN; //OPEN = -1
     int y = OPEN;
     int sub_tile = OPEN;
 
@@ -1039,6 +1039,7 @@ struct t_placer_opts {
     std::vector<float> place_static_move_prob;
     std::vector<float> place_static_notiming_move_prob;
     bool RL_agent_placement;
+    bool RL_gym_placement;
     bool place_agent_multistate;
     bool place_checkpointing;
     int place_high_fanout_net;
