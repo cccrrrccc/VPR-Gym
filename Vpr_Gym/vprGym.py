@@ -6,29 +6,28 @@ from gym.spaces import Discrete, Box
 import random
 
 # Vpr option
-seed = 10
-inner_num = 0.1
-arch = '../vtr_flow/arch/titan/stratixiv_arch.timing.xml'
-benchmark = '../vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif'
-addr = "tcp://localhost:5555"
+default_seed = 10
+default_inner_num = 0.1
+default_arch = '../vtr_flow/arch/titan/stratixiv_arch.timing.xml'
+default_benchmark = '../vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif'
+default_addr = "tcp://localhost:5555"
 
 # Socket setup
 ctx = zmq.Context()
 socket = ctx.socket(zmq.REP)
-socket.connect(addr)
-
 
 
 class VprEnv(Env):
-	def __init__(self):
+	def __init__(self, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr):
 		process = Popen(['../vpr/vpr'
-		, '../vtr_flow/arch/titan/stratixiv_arch.timing.xml'
-		, '../vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif'
+		, arch
+		, benchmark
 		, '--route_chan_width', '300'
 		, '--pack', '--place', '--seed', str(seed), '--inner_num', str(inner_num)
 		, '--RL_gym_placement', 'on'
 		])
-		
+		self.addr = addr
+		socket.connect(self.addr)
 		msg = socket.recv()
 		self.num_actions = int(msg.decode('utf-8'))
 		self.action_space = Discrete(int(msg.decode('utf-8')))
@@ -41,7 +40,7 @@ class VprEnv(Env):
 		if (msg.decode('utf-8') == 'end'):
 			done = True
 			reward = 0
-			socket.disconnect(addr)
+			socket.disconnect(self.addr)
 		else:
 			done = False
 			reward = float(msg.decode('utf-8'))
