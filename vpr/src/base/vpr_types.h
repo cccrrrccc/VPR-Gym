@@ -1040,6 +1040,7 @@ struct t_placer_opts {
     std::vector<float> place_static_notiming_move_prob;
     bool RL_agent_placement;
     bool RL_gym_placement;
+    bool RL_gym_placement_blk_type;
     bool place_agent_multistate;
     bool place_checkpointing;
     int place_high_fanout_net;

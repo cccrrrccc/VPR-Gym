@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "move_utils.h"
 
 #include "place_util.h"
@@ -521,6 +523,37 @@ ClusterBlockId pick_from_block() {
 
         if (place_ctx.block_locs[b_from].is_fixed) {
             continue; //Fixed location, try again
+        }
+
+        //Found a movable block
+        return b_from;
+    }
+
+    //No movable blocks found
+    return ClusterBlockId::INVALID();
+}
+
+ClusterBlockId pick_from_block_type(const char* blk_type_name) {
+    auto& cluster_ctx = g_vpr_ctx.clustering();
+    auto& place_ctx = g_vpr_ctx.mutable_placement();
+
+    std::unordered_set<ClusterBlockId> tried_from_blocks;
+
+    //So long as untried blocks remain
+    while (tried_from_blocks.size() < cluster_ctx.clb_nlist.blocks().size()) {
+        //Pick a block at random
+        ClusterBlockId b_from = ClusterBlockId(vtr::irand((int)cluster_ctx.clb_nlist.blocks().size() - 1));
+
+        //Record it as tried
+        tried_from_blocks.insert(b_from);
+
+        if (place_ctx.block_locs[b_from].is_fixed) {
+            continue; //Fixed location, try again
+        }
+
+        auto cluster_from_type = cluster_ctx.clb_nlist.block_type(b_from);
+        if (strcmp(blk_type_name, cluster_from_type->name) != 0) {
+            continue;
         }
 
         //Found a movable block

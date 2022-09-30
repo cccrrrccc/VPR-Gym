@@ -4,6 +4,7 @@
 #include <numeric>
 #include <cmath>
 #include <zmq.hpp>
+#include <zmq_addon.hpp>
 #include <limits>
 #include <string>
 
@@ -117,7 +118,6 @@ SimpleRLMoveGenerator::SimpleRLMoveGenerator(std::unique_ptr<MOSSAgent>& agent) 
 }
 
 e_create_move SimpleRLMoveGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities) {
-    auto& cluster_ctx = g_vpr_ctx.clustering(); 
     move_type = (e_move_type)karmed_bandit_agent->propose_action();
     e_create_move move = avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
     return move;
@@ -138,30 +138,73 @@ RLGymGenerator::RLGymGenerator(size_t num_actions)
     avail_moves.push_back(std::move(std::make_unique<CriticalUniformMoveGenerator>()));
     avail_moves.push_back(std::move(std::make_unique<FeasibleRegionMoveGenerator>()));
 
+    find_all_types();
+
+    socket.bind("tcp://*:5555");
+    std::vector<zmq::message_t> msgs;
+    msgs.push_back(zmq::message_t(std::to_string((int) num_actions)));
+    msgs.push_back(zmq::message_t(std::to_string(blk_type_set.size())));
+    send_multipart(socket, msgs);
+
+    /* MAB no types
     socket.bind("tcp://*:5555");
     zmq::message_t msg(std::to_string((int) num_actions)); // Send the width of search space to RL gym
     socket.send(msg, zmq::send_flags::none);
+    */
+}
+
+void RLGymGenerator::find_all_types() {
+    auto& cluster_ctx = g_vpr_ctx.clustering();
+    blk_type_set.clear();
+    for (auto blk_id:cluster_ctx.clb_nlist.blocks()) {
+        auto cluster_from_type = cluster_ctx.clb_nlist.block_type(blk_id);
+        std::string str(cluster_from_type->name);
+        blk_type_set.insert(str);
+    }
 }
 
 RLGymGenerator::~RLGymGenerator() {
     zmq::message_t msg("end", 3);
+    /*
     zmq::message_t reply;
     socket.recv(reply, zmq::recv_flags::none);
+    */
+    std::vector<zmq::message_t> msgs;
+    recv_multipart(socket, std::back_inserter(msgs));
     socket.send(msg, zmq::send_flags::none);
-    //socket.disconnect("tcp://*:5555");
 }
 
 e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities) {
+    /* Pure MAB
     zmq::message_t msg;
     socket.recv(msg, zmq::recv_flags::none);
     std::string str = msg.to_string();
     size_t action = (size_t) std::stoi(str);
     last_action_ = action;
+    */
+    if (placer_opts.RL_gym_placement_blk_type == true) {
+        std::vector<zmq::message_t> msgs;
+        recv_multipart(socket, std::back_inserter(msgs));
+        size_t action = (size_t) std::stoi(msgs[0].to_string());
+        size_t type = (size_t) std::stoi(msgs[1].to_string());
+        const char* blk_type_name = std::vector<std::string>(blk_type_set.begin(), blk_type_set.end()).at((int) type).c_str();
+        last_action_ = action;
 
-    auto& cluster_ctx = g_vpr_ctx.clustering(); 
-    move_type = (e_move_type) action;
-    e_create_move move = avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
-    return move;
+        move_type = (e_move_type) action;
+        e_create_move move = avail_moves[(int)move_type]->propose_move_with_type(blocks_affected, move_type, rlim, placer_opts, criticalities, blk_type_name);
+        return move;
+    }
+    else {
+        zmq::message_t msg;
+        socket.recv(msg, zmq::recv_flags::none);
+        std::string str = msg.to_string();
+        size_t action = (size_t) std::stoi(str);
+        last_action_ = action;
+
+        move_type = (e_move_type) action;
+        e_create_move move = avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
+        return move;
+    }
 }
 
 void RLGymGenerator::process_outcome(double reward, e_reward_function reward_fun) {
@@ -875,7 +918,7 @@ void UCB1_Agent::set_c(float c) {
     c_ = c;
 }
 
-void UCB1_Agent::set_step(float gamma, int move_lim) {
+void UCB1_Agent::set_step(float gamma, int /*move_lim*/) {
     VTR_LOG("Setting decay step: %g\n", exp_alpha_);
     if (gamma < 0) {
         exp_alpha_ = -1; //Use sample average

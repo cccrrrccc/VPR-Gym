@@ -24,6 +24,7 @@ class StaticMoveGenerator : public MoveGenerator {
 
   public:
     StaticMoveGenerator(const std::vector<float>& prob);
+    e_create_move propose_move_with_type(t_pl_blocks_to_be_moved& /*blocks_affected*/, e_move_type& /*move_type*/, float /*rlim*/, const t_placer_opts& /*placer_opts*/, const PlacerCriticalities* /*criticalities*/, const char* /*blk_type_name*/) {return e_create_move::ABORT;}
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
 };
 #endif

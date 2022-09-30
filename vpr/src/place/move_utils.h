@@ -99,6 +99,8 @@ std::set<t_pl_loc> determine_locations_emptied_by_move(t_pl_blocks_to_be_moved& 
 
 ClusterBlockId pick_from_block();
 
+ClusterBlockId pick_from_block_type(const char* blk_type_name);
+
 bool find_to_loc_uniform(t_logical_block_type_ptr type,
                          float rlim,
                          const t_pl_loc from,

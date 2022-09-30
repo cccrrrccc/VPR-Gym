@@ -1985,6 +1985,13 @@ argparse::ArgumentParser create_arg_parser(std::string prog_name, t_options& arg
         .default_value("off")
         .show_in(argparse::ShowIn::HELP_ONLY);
 
+    place_grp.add_argument<bool, ParseOnOff>(args.RL_gym_placement_blk_type, "--RL_gym_placement_blk_type")
+        .help(
+            "The agent choose not only the directed moves but also the block types"
+            "It communicate with python OpenAIGym class and get action from python")
+        .default_value("on")
+        .show_in(argparse::ShowIn::HELP_ONLY);
+
     place_grp.add_argument<bool, ParseOnOff>(args.place_agent_multistate, "--place_agent_multistate")
         .help(
             "Enable multistate agent. "

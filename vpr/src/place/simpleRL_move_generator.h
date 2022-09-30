@@ -18,7 +18,7 @@ class KArmedBanditAgent {
   public:
     virtual ~KArmedBanditAgent() {}
     virtual size_t propose_action() = 0;
-    virtual void process_outcome(double reward, e_reward_function reward_fun) {
+    virtual void process_outcome(double /*reward*/, e_reward_function /*reward_fun*/) {
     }
 
   protected:
@@ -252,9 +252,10 @@ class SimpleRLMoveGenerator : public MoveGenerator {
 
     // Updates affected_blocks with the proposed move, while respecting the current rlim
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
-
+    e_create_move propose_move_with_type(t_pl_blocks_to_be_moved& /*blocks_affected*/, e_move_type& /*move_type*/, float /*rlim*/, const t_placer_opts& /*placer_opts*/, const PlacerCriticalities* /*criticalities*/, const char* /*blk_type_name*/) {return e_create_move::ABORT;}
     // Recieves feedback about the outcome of the previously proposed move
     void process_outcome(double reward, e_reward_function reward_fun);
+
 };
 
 /**
@@ -272,11 +273,14 @@ class RLGymGenerator: public MoveGenerator {
     size_t last_action_ = 0;
     std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
     size_t num_available_actions_;
+    std::set<std::string> blk_type_set;
   public:
     RLGymGenerator(size_t num_actions);
     ~RLGymGenerator();
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
     void process_outcome(double reward, e_reward_function reward_fun);
+    e_create_move propose_move_with_type(t_pl_blocks_to_be_moved& /*blocks_affected*/, e_move_type& /*move_type*/, float /*rlim*/, const t_placer_opts& /*placer_opts*/, const PlacerCriticalities* /*criticalities*/, const char* /*blk_type_name*/) {return e_create_move::ABORT;}
+    void find_all_types();
 };
 
 
