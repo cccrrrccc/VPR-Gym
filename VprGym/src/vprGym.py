@@ -21,7 +21,7 @@ ctx = zmq.Context()
 socket = ctx.socket(zmq.REP)
 
 # Create a folder under given directory and change the current working directory to it
-def handle_directory(directory, seed, inner_num, blk_type):
+def handle_directory(directory, seed, inner_num, blk_type, port):
 	try:
 		os.chdir(directory)
 	except FileNotFoundError:
@@ -29,15 +29,15 @@ def handle_directory(directory, seed, inner_num, blk_type):
 		os.chdir(directory)
 
 	try:
-		os.mkdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type)
-		os.chdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type)
+		os.mkdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type + '_port' + port)
+		os.chdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type + '_port' + port)
 	except FileExistsError:
-		os.chdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type)
+		os.chdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type + '_port' + port)
 			
 
 class VprEnv(Env):
 	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port):
-		handle_directory(directory, seed, inner_num, 'off')
+		handle_directory(directory, seed, inner_num, 'off', port)
 	
 		process = Popen([os.path.join(vtr_root, 'vpr/vpr')
 		, os.path.join(vtr_root, arch)
@@ -46,6 +46,7 @@ class VprEnv(Env):
 		, '--pack', '--place', '--seed', str(seed), '--inner_num', str(inner_num)
 		, '--RL_gym_placement', 'on'
 		, '--RL_gym_placement_blk_type', 'off'
+		, '--RL_gym_port', port
 		])
 		self.addr = addr + port
 		socket.connect(self.addr)
@@ -77,7 +78,7 @@ class VprEnv(Env):
 		
 class VprEnv_blk_type(Env):
 	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port):
-		handle_directory(directory, seed, inner_num, 'on')	
+		handle_directory(directory, seed, inner_num, 'on', port)	
 		
 		process = Popen([os.path.join(vtr_root, 'vpr/vpr')
 		, os.path.join(vtr_root, arch)
@@ -86,6 +87,7 @@ class VprEnv_blk_type(Env):
 		, '--pack', '--place', '--seed', str(seed), '--inner_num', str(inner_num)
 		, '--RL_gym_placement', 'on'
 		, '--RL_gym_placement_blk_type', 'on'
+		, '--RL_gym_port', port
 		])
 		self.addr = addr + port
 		socket.connect(self.addr)
