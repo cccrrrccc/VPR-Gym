@@ -4,24 +4,43 @@ from gym import Env
 import numpy as np
 from gym.spaces import Discrete, Box, Tuple
 import random
+import os
 
 # Vpr option
 default_seed = 10
 default_inner_num = 0.1
-default_arch = '../vtr_flow/arch/titan/stratixiv_arch.timing.xml'
-default_benchmark = '../vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif'
+default_arch = 'vtr_flow/arch/titan/stratixiv_arch.timing.xml'
+default_benchmark = 'vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif'
 default_addr = "tcp://localhost:5555"
+default_directory = 'experiment'
+default_vtr_root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Socket setup
 ctx = zmq.Context()
 socket = ctx.socket(zmq.REP)
 
+# Create a folder under given directory and change the current working directory to it
+def handle_directory(directory, seed, inner_num, blk_type):
+	try:
+		os.chdir(directory)
+	except FileNotFoundError:
+		os.mkdir(directory)
+		os.chdir(directory)
+
+	try:
+		os.mkdir('--seed' + str(seed) + '--inner_num' + str(inner_num) + '--RL_gym_placement_blk_type' + blk_type)
+		os.chdir('--seed' + str(seed) + '--inner_num' + str(inner_num) + '--RL_gym_placement_blk_type' + blk_type)
+	except FileExistsError:
+		os.chdir('--seed' + str(seed) + '--inner_num' + str(inner_num) + '--RL_gym_placement_blk_type' + blk_type)
+			
 
 class VprEnv(Env):
-	def __init__(self, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr):
-		process = Popen(['../vpr/vpr'
-		, arch
-		, benchmark
+	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory):
+		handle_directory(directory, seed, inner_num, 'off')
+	
+		process = Popen([os.path.join(vtr_root, 'vpr/vpr')
+		, os.path.join(vtr_root, arch)
+		, os.path.join(vtr_root, benchmark)
 		, '--route_chan_width', '300'
 		, '--pack', '--place', '--seed', str(seed), '--inner_num', str(inner_num)
 		, '--RL_gym_placement', 'on'
@@ -55,11 +74,13 @@ class VprEnv(Env):
 	def reset(self):
 		pass
 		
-class VprEnv_2(Env):
-	def __init__(self, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr):
-		process = Popen(['../vpr/vpr'
-		, arch
-		, benchmark
+class VprEnv_blk_type(Env):
+	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory):
+		handle_directory(directory, seed, inner_num, 'on')	
+		
+		process = Popen([os.path.join(vtr_root, 'vpr/vpr')
+		, os.path.join(vtr_root, arch)
+		, os.path.join(vtr_root, benchmark)
 		, '--route_chan_width', '300'
 		, '--pack', '--place', '--seed', str(seed), '--inner_num', str(inner_num)
 		, '--RL_gym_placement', 'on'
