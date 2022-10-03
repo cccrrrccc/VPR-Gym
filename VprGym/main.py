@@ -1,4 +1,5 @@
 from src.vprGym import VprEnv
+import random
 
 env = VprEnv(inner_num = 0.2)
 done = False
