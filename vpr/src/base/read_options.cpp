@@ -1992,6 +1992,11 @@ argparse::ArgumentParser create_arg_parser(std::string prog_name, t_options& arg
         .default_value("on")
         .show_in(argparse::ShowIn::HELP_ONLY);
 
+    place_grp.add_argument<std::string>(args.RL_gym_port, "--RL_gym_port")
+        .help(
+            "Select a port for RL gym's zmq transfer\n")
+        .default_value("5555");
+
     place_grp.add_argument<bool, ParseOnOff>(args.place_agent_multistate, "--place_agent_multistate")
         .help(
             "Enable multistate agent. "

@@ -31,7 +31,7 @@ void assign_current_move_generator(std::unique_ptr<MoveGenerator>& move_generato
  */
 void update_move_generator(std::unique_ptr<MoveGenerator>& move_generator, std::unique_ptr<MoveGenerator>& move_generator2, e_agent_state agent_state, const t_placer_opts& placer_opts, bool in_quench, std::unique_ptr<MoveGenerator>& current_move_generator);
 
-void create_gym_generator(std::unique_ptr<MoveGenerator>& move_generator, const t_placer_opts& /*placer_opts*/, int /*move_lim*/, size_t num_actions);
+void create_gym_generator(std::unique_ptr<MoveGenerator>& move_generator, const t_placer_opts& placer_opts, int /*move_lim*/, size_t num_actions);
 
 void delete_gym_generator(std::unique_ptr<MoveGenerator>& move_generator);
 

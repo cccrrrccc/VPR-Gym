@@ -127,7 +127,7 @@ void SimpleRLMoveGenerator::process_outcome(double reward, e_reward_function rew
     karmed_bandit_agent->process_outcome(reward, reward_fun);
 }
 
-RLGymGenerator::RLGymGenerator(size_t num_actions)
+RLGymGenerator::RLGymGenerator(size_t num_actions, const t_placer_opts& placer_opts)
     : socket(ctx, ZMQ_REQ)
 {
     avail_moves.push_back(std::move(std::make_unique<UniformMoveGenerator>()));
@@ -139,8 +139,11 @@ RLGymGenerator::RLGymGenerator(size_t num_actions)
     avail_moves.push_back(std::move(std::make_unique<FeasibleRegionMoveGenerator>()));
 
     find_all_types();
+    std::string addr_head ("tcp://*:");
+    std::string addr = addr_head + placer_opts.RL_gym_port;
 
-    socket.bind("tcp://*:5555");
+
+    socket.bind(addr);
     std::vector<zmq::message_t> msgs;
     msgs.push_back(zmq::message_t(std::to_string((int) num_actions)));
     msgs.push_back(zmq::message_t(std::to_string(blk_type_set.size())));

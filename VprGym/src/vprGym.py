@@ -11,7 +11,8 @@ default_seed = 10
 default_inner_num = 0.1
 default_arch = 'vtr_flow/arch/titan/stratixiv_arch.timing.xml'
 default_benchmark = 'vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif'
-default_addr = "tcp://localhost:5555"
+default_addr = "tcp://localhost:"
+default_port = "5555"
 default_directory = 'experiment'
 default_vtr_root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -28,14 +29,14 @@ def handle_directory(directory, seed, inner_num, blk_type):
 		os.chdir(directory)
 
 	try:
-		os.mkdir('--seed' + str(seed) + '--inner_num' + str(inner_num) + '--RL_gym_placement_blk_type' + blk_type)
-		os.chdir('--seed' + str(seed) + '--inner_num' + str(inner_num) + '--RL_gym_placement_blk_type' + blk_type)
+		os.mkdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type)
+		os.chdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type)
 	except FileExistsError:
-		os.chdir('--seed' + str(seed) + '--inner_num' + str(inner_num) + '--RL_gym_placement_blk_type' + blk_type)
+		os.chdir('seed_' + str(seed) + '_inner_num_' + str(inner_num) + '_RL_gym_placement_blk_type_' + blk_type)
 			
 
 class VprEnv(Env):
-	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory):
+	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port):
 		handle_directory(directory, seed, inner_num, 'off')
 	
 		process = Popen([os.path.join(vtr_root, 'vpr/vpr')
@@ -46,7 +47,7 @@ class VprEnv(Env):
 		, '--RL_gym_placement', 'on'
 		, '--RL_gym_placement_blk_type', 'off'
 		])
-		self.addr = addr
+		self.addr = addr + port
 		socket.connect(self.addr)
 		msgs = socket.recv_multipart()
 		self.num_actions = int(msgs[0].decode('utf-8'))
@@ -75,7 +76,7 @@ class VprEnv(Env):
 		pass
 		
 class VprEnv_blk_type(Env):
-	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory):
+	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port):
 		handle_directory(directory, seed, inner_num, 'on')	
 		
 		process = Popen([os.path.join(vtr_root, 'vpr/vpr')
@@ -86,7 +87,7 @@ class VprEnv_blk_type(Env):
 		, '--RL_gym_placement', 'on'
 		, '--RL_gym_placement_blk_type', 'on'
 		])
-		self.addr = addr
+		self.addr = addr + port
 		socket.connect(self.addr)
 		msgs = socket.recv_multipart()
 		self.num_actions = int(msgs[0].decode('utf-8'))

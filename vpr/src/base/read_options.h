@@ -38,6 +38,8 @@ struct t_options {
 
     argparse::ArgValue<std::string> write_block_usage;
 
+    argparse::ArgValue<std::string> RL_gym_port;
+
     /* Stage Options */
     argparse::ArgValue<bool> do_packing;
     argparse::ArgValue<bool> do_placement;

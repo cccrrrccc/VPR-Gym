@@ -1041,6 +1041,7 @@ struct t_placer_opts {
     bool RL_agent_placement;
     bool RL_gym_placement;
     bool RL_gym_placement_blk_type;
+    std::string RL_gym_port;
     bool place_agent_multistate;
     bool place_checkpointing;
     int place_high_fanout_net;

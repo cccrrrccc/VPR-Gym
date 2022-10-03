@@ -604,7 +604,7 @@ static void SetupPlacerOpts(const t_options& Options, t_placer_opts* PlacerOpts)
     PlacerOpts->place_high_fanout_net = Options.place_high_fanout_net;
     PlacerOpts->RL_gym_placement_blk_type = Options.RL_gym_placement_blk_type;
     PlacerOpts->RL_gym_placement = Options.RL_gym_placement;
-    PlacerOpts->RL_gym_placement = Options.RL_gym_placement;
+    PlacerOpts->RL_gym_port = Options.RL_gym_port;
     PlacerOpts->place_agent_multistate = Options.place_agent_multistate;
     PlacerOpts->place_checkpointing = Options.place_checkpointing;
     PlacerOpts->place_agent_epsilon = Options.place_agent_epsilon;

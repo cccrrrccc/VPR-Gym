@@ -275,7 +275,7 @@ class RLGymGenerator: public MoveGenerator {
     size_t num_available_actions_;
     std::set<std::string> blk_type_set;
   public:
-    RLGymGenerator(size_t num_actions);
+    RLGymGenerator(size_t num_actions, const t_placer_opts& placer_opts);
     ~RLGymGenerator();
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
     void process_outcome(double reward, e_reward_function reward_fun);
