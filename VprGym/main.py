@@ -1,5 +1,6 @@
 from src.vprGym import VprEnv, VprEnv_blk_type
 import random
+import mabwiser.mab import MAB, LearningPolicy, NeighborhoodPolicy
 
 env = VprEnv_blk_type(inner_num = 0.1, port = "6666")
 done = False

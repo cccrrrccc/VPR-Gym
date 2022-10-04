@@ -274,6 +274,7 @@ class RLGymGenerator: public MoveGenerator {
     std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
     size_t num_available_actions_;
     std::set<std::string> blk_type_set;
+    int elapsed_time = 0;
   public:
     RLGymGenerator(size_t num_actions, const t_placer_opts& placer_opts);
     ~RLGymGenerator();

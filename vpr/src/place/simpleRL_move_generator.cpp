@@ -8,6 +8,8 @@
 #include <limits>
 #include <string>
 
+#include <chrono>
+
 #include "vtr_random.h"
 
 /* File-scope routines */
@@ -144,16 +146,14 @@ RLGymGenerator::RLGymGenerator(size_t num_actions, const t_placer_opts& placer_o
 
 
     socket.bind(addr);
+    auto t1 = std::chrono::steady_clock::now();
     std::vector<zmq::message_t> msgs;
     msgs.push_back(zmq::message_t(std::to_string((int) num_actions)));
     msgs.push_back(zmq::message_t(std::to_string(blk_type_set.size())));
     send_multipart(socket, msgs);
+    auto t2 = std::chrono::steady_clock::now();
 
-    /* MAB no types
-    socket.bind("tcp://*:5555");
-    zmq::message_t msg(std::to_string((int) num_actions)); // Send the width of search space to RL gym
-    socket.send(msg, zmq::send_flags::none);
-    */
+    elapsed_time += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 }
 
 void RLGymGenerator::find_all_types() {
@@ -173,8 +173,12 @@ RLGymGenerator::~RLGymGenerator() {
     socket.recv(reply, zmq::recv_flags::none);
     */
     std::vector<zmq::message_t> msgs;
+    auto t1 = std::chrono::steady_clock::now();
     recv_multipart(socket, std::back_inserter(msgs));
     socket.send(msg, zmq::send_flags::none);
+    auto t2 = std::chrono::steady_clock::now();
+    elapsed_time += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+    VTR_LOG("Zeromq elapsed time (microseconds): %d\n", elapsed_time);
 }
 
 e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities) {
@@ -187,11 +191,14 @@ e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affec
     */
     if (placer_opts.RL_gym_placement_blk_type == true) {
         std::vector<zmq::message_t> msgs;
+        auto t1 = std::chrono::steady_clock::now();
         recv_multipart(socket, std::back_inserter(msgs));
         size_t action = (size_t) std::stoi(msgs[0].to_string());
         size_t type = (size_t) std::stoi(msgs[1].to_string());
         const char* blk_type_name = std::vector<std::string>(blk_type_set.begin(), blk_type_set.end()).at((int) type).c_str();
         last_action_ = action;
+        auto t2 = std::chrono::steady_clock::now();
+        elapsed_time += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
         move_type = (e_move_type) action;
         e_create_move move = avail_moves[(int)move_type]->propose_move_with_type(blocks_affected, move_type, rlim, placer_opts, criticalities, blk_type_name);
@@ -199,10 +206,13 @@ e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affec
     }
     else {
         zmq::message_t msg;
+        auto t1 = std::chrono::steady_clock::now();
         socket.recv(msg, zmq::recv_flags::none);
         std::string str = msg.to_string();
         size_t action = (size_t) std::stoi(str);
         last_action_ = action;
+        auto t2 = std::chrono::steady_clock::now();
+        elapsed_time += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
         move_type = (e_move_type) action;
         e_create_move move = avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
@@ -214,7 +224,10 @@ void RLGymGenerator::process_outcome(double reward, e_reward_function reward_fun
     if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
         reward /= time_elapsed_[last_action_];
     zmq::message_t msg(std::to_string(reward));
+    auto t1 = std::chrono::steady_clock::now();
     socket.send(msg, zmq::send_flags::none);
+    auto t2 = std::chrono::steady_clock::now();
+    elapsed_time += std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 }
 
 
