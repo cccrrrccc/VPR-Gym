@@ -37,8 +37,6 @@ def stage2_weights(num_actions, probs):
 	weights.append(1)
 	weights.append(1)
 	return np.array(weights)
-	
-Explore_Prob = 0.1
 
 def train(inner_num, seed, direct, g, ip, name):
 	np.random.seed(int(seed))
@@ -46,7 +44,7 @@ def train(inner_num, seed, direct, g, ip, name):
 	probs = [x / sum(env.num_blks) for x in env.num_blks]
 	weights = stage1_weights(env.num_actions, probs)
 	arm_features = stage1_arm_feature(env.num_actions, env.num_types)
-	agent =  Policies.Exp3ELM(nbArms = len(arm_features), delta = float(g), unbiased = True)
+	agent =  Policies.Exp3ELM(nbArms = len(arm_features), delta = 0.01, unbiased = True)
 	agent.weights = weights.copy()
 	## Set the weights of blk_agent according to the number of each type
 	sum_reward = 0
@@ -58,7 +56,7 @@ def train(inner_num, seed, direct, g, ip, name):
 	count = 0
 	horizon = env.horizon
 	while (done == False):
-		if random.uniform(0, 1) >= Explore_Prob:
+		if random.uniform(0, 1) >= float(g):
 			prediction = agent.choice()
 		else:
 			while True:
@@ -70,7 +68,7 @@ def train(inner_num, seed, direct, g, ip, name):
 		if info == 'stage2':
 			weights = stage2_weights(env.num_actions, probs)
 			arm_features = stage2_arm_feature(env.num_actions, env.num_types)
-			agent =  Policies.Exp3ELM(nbArms = len(arm_features), delta = float(g), unbiased = True)
+			agent =  Policies.Exp3ELM(nbArms = len(arm_features), delta = 0.01, unbiased = True)
 			agent.weights = weights.copy()
 			continue
 		#normalize the reward
@@ -91,7 +89,7 @@ def train(inner_num, seed, direct, g, ip, name):
 		if count >= horizon:
 			avg_reward = sum_reward / count
 			if local_max_reward < 0:
-				agent =  Policies.Exp3ELM(nbArms = len(arm_features), delta = float(g), unbiased = True)
+				agent =  Policies.Exp3ELM(nbArms = len(arm_features), delta = 0.01, unbiased = True)
 				agent.weights = weights.copy()
 				print('reset agent')
 			count = 0
