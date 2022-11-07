@@ -456,7 +456,7 @@ void try_place(const t_placer_opts& placer_opts,
     std::unique_ptr<PlaceDelayModel> place_delay_model;
     std::unique_ptr<MoveGenerator> move_generator;
     std::unique_ptr<MoveGenerator> move_generator2;
-    std::unique_ptr<MoveGenerator> gym_generator;
+    std::unique_ptr<RLGymGenerator> gym_generator;
     std::unique_ptr<ManualMoveGenerator> manual_move_generator;
     std::unique_ptr<PlacerSetupSlacks> placer_setup_slacks;
 
@@ -497,7 +497,7 @@ void try_place(const t_placer_opts& placer_opts,
     create_move_generators(move_generator, move_generator2, placer_opts, move_lim);
 
     if (placer_opts.RL_gym_placement == true) {
-        create_gym_generator(gym_generator, placer_opts, move_lim, NUM_PL_MOVE_TYPES);
+        create_gym_generator(gym_generator, placer_opts, move_lim, NUM_PL_1ST_STATE_MOVE_TYPES);
     }
 
     width_fac = placer_opts.place_chan_width;
@@ -779,6 +779,7 @@ void try_place(const t_placer_opts& placer_opts,
 
                 //see if we should save the current placement solution as a checkpoint
 
+
                 if (placer_opts.place_checkpointing
                     && agent_state == LATE_IN_THE_ANNEAL) {
                     save_placement_checkpoint_if_needed(placement_checkpoint,
@@ -828,6 +829,9 @@ void try_place(const t_placer_opts& placer_opts,
                 if (state.alpha < 0.85 && state.alpha > 0.6) {
                     agent_state = LATE_IN_THE_ANNEAL;
                     VTR_LOG("Agent's 2nd state: \n");
+                    if (placer_opts.RL_gym_placement == true) {
+                        gym_generator->stage2();
+                    }
                 }
             }
 

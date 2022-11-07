@@ -1,0 +1,4 @@
+pip install pyzmq
+pip install gym
+pip install git+https://github.com/SMPyBandits/SMPyBandits.git#egg=SMPyBandits[full]
+pip install torch

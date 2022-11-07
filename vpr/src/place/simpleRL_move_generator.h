@@ -271,17 +271,21 @@ class RLGymGenerator: public MoveGenerator {
     zmq::context_t ctx;
     zmq::socket_t socket;
     size_t last_action_ = 0;
-    std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
+    //std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
+    std::vector<double> time_elapsed_{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
     size_t num_available_actions_;
     std::set<std::string> blk_type_set;
-    int elapsed_time = 0;
+    std::map<std::string, int> blk_type_num;
+    float elapsed_time = 0;
   public:
-    RLGymGenerator(size_t num_actions, const t_placer_opts& placer_opts);
+    RLGymGenerator(size_t num_actions, const t_placer_opts& placer_opts, int move_lim);
     ~RLGymGenerator();
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
     void process_outcome(double reward, e_reward_function reward_fun);
     e_create_move propose_move_with_type(t_pl_blocks_to_be_moved& /*blocks_affected*/, e_move_type& /*move_type*/, float /*rlim*/, const t_placer_opts& /*placer_opts*/, const PlacerCriticalities* /*criticalities*/, const char* /*blk_type_name*/) {return e_create_move::ABORT;}
     void find_all_types();
+    void reset_agent();
+    void stage2();
 };
 
 

@@ -251,10 +251,10 @@ void update_move_generator(std::unique_ptr<MoveGenerator>& move_generator, std::
     }
 }
 
-void create_gym_generator(std::unique_ptr<MoveGenerator>& move_generator, const t_placer_opts& placer_opts, int /*move_lim*/, size_t num_actions) {
-    move_generator = std::make_unique<RLGymGenerator>(num_actions, placer_opts);
+void create_gym_generator(std::unique_ptr<RLGymGenerator>& move_generator, const t_placer_opts& placer_opts, int move_lim, size_t num_actions) {
+    move_generator = std::make_unique<RLGymGenerator>(num_actions, placer_opts, move_lim);
 }
 
-void delete_gym_generator(std::unique_ptr<MoveGenerator>& move_generator) {
+void delete_gym_generator(std::unique_ptr<RLGymGenerator>& move_generator) {
     move_generator.reset();
 }
