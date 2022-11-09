@@ -141,7 +141,9 @@ class VprEnv_blk_type(Env):
 		self.action_space = Tuple((Discrete(self.num_actions), Discrete(self.num_types)))
 		self.observation_space = Box(low=np.array([0]), high=np.array([0]))
 		self.state = 0
+		
 		self.stage2 = False
+		self.reset_happened = False
 		
 	def step(self, action):
 		self.socket.send_multipart([str(action[0]).encode('utf-8'), str(action[1]).encode('utf-8')])
@@ -160,6 +162,7 @@ class VprEnv_blk_type(Env):
 		elif (msg.decode('utf-8') == 'reset'):
 			done = False
 			info = 'reset'
+			self.reset_happened = True
 			reward = 0
 		elif (msg.decode('utf-8') == 'stage2'):
 			done = False

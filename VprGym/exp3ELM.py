@@ -121,7 +121,7 @@ if __name__ == '__main__':
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('EXP3ELM_' + name + '.log','w') as f:
+	with open('EXP3ELM_' + name +'_' + str(g) + '.log','w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)

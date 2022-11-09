@@ -463,6 +463,9 @@ void try_place(const t_placer_opts& placer_opts,
     std::unique_ptr<PlacerCriticalities> placer_criticalities;
     std::unique_ptr<ClusteredPinTimingInvalidator> pin_timing_invalidator;
 
+    float init_rlim = 0;
+    bool reset_happened = false;
+
     manual_move_generator = std::make_unique<ManualMoveGenerator>();
 
     t_pl_blocks_to_be_moved blocks_affected(
@@ -722,6 +725,7 @@ void try_place(const t_placer_opts& placer_opts,
 
     t_annealing_state state(annealing_sched, first_t, first_rlim,
                             first_move_lim, first_crit_exponent);
+    init_rlim = state.rlim;
 
     /* Update the starting temperature for placement annealing to a more appropriate value */
     state.t = starting_t(&state, &costs, annealing_sched,
@@ -771,7 +775,12 @@ void try_place(const t_placer_opts& placer_opts,
                                           place_delay_model.get(), placer_criticalities.get(),
                                           placer_setup_slacks.get(), pin_timing_invalidator.get(),
                                           timing_info.get());
-
+            /*
+            if (init_rlim != state.rlim && !reset_happened) {
+                gym_generator->reset_agent();
+                reset_happened = true;
+            }
+            */
             if (placer_opts.place_algorithm.is_timing_driven()) {
                 critical_path = timing_info->least_slack_critical_path();
                 sTNS = timing_info->setup_total_negative_slack();

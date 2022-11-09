@@ -277,6 +277,7 @@ class RLGymGenerator: public MoveGenerator {
     std::set<std::string> blk_type_set;
     std::map<std::string, int> blk_type_num;
     float elapsed_time = 0;
+    bool reset_happened = false;
   public:
     RLGymGenerator(size_t num_actions, const t_placer_opts& placer_opts, int move_lim);
     ~RLGymGenerator();

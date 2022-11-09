@@ -249,6 +249,7 @@ void RLGymGenerator::reset_agent() {
     recv_multipart(socket, std::back_inserter(msgs));
     zmq::message_t msg("reset", 5);
     socket.send(msg, zmq::send_flags::none);
+    reset_happened = true;
 }
 
 void RLGymGenerator::stage2() {

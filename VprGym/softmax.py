@@ -14,7 +14,7 @@ def create_arm_feature(num_actions, num_types):
 
 def train(inner_num, seed, direct, g, ip, name):
 	np.random.seed(int(seed))
-	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'softmax_' + name, benchmark = direct)
+	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'softmax_' + name +'_' + str(g), benchmark = direct)
 	
 	arm_to_feature = list(np.arange(env.num_actions))
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
