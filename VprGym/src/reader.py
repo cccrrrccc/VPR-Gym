@@ -16,7 +16,7 @@ def read_WL_CPD():
 		if WLHeader in line:
 			WL = int(line.split()[-1])
 		if CPDHeader in line:
-			CPD = float(line.split()[-2])
+			CPD = float(line.split()[7])
 		if RTHeader in line:
 			PT = float(line.split()[3])
 		if ZMQTHeader in line:
