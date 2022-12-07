@@ -387,6 +387,7 @@ static void generate_post_place_timing_reports(const t_placer_opts& placer_opts,
 
 //calculate the agent's reward and the total process outcome
 static void calculate_reward_and_process_outcome(
+    const t_annealing_state& state,
     const t_placer_opts& placer_opts,
     const MoveOutcomeStats& move_outcome_stats,
     const double& delta_c,
@@ -1586,7 +1587,7 @@ static e_move_result try_swap(const t_annealing_state* state,
     }
     move_outcome_stats.outcome = move_outcome;
 
-    calculate_reward_and_process_outcome(placer_opts, move_outcome_stats,
+    calculate_reward_and_process_outcome(*state, placer_opts, move_outcome_stats,
                                          delta_c, timing_bb_factor, move_generator);
 
 #ifdef VTR_ENABLE_DEBUG_LOGGING
@@ -3071,6 +3072,7 @@ static void print_placement_move_types_stats(
 }
 
 static void calculate_reward_and_process_outcome(
+    const t_annealing_state& state,
     const t_placer_opts& placer_opts,
     const MoveOutcomeStats& move_outcome_stats,
     const double& delta_c,
@@ -3100,7 +3102,20 @@ static void calculate_reward_and_process_outcome(
         } else {
             move_generator.process_outcome(0, reward_fun);
         }
+    } else if (reward_fun == WL_BIASED) {
+        if (delta_c < 0) {
+            float reward = -1
+                           * (move_outcome_stats.delta_cost_norm
+                              + (0.5 - timing_bb_factor)
+                                    * move_outcome_stats.delta_timing_cost_norm
+                              + timing_bb_factor
+                                    * move_outcome_stats.delta_bb_cost_norm);
+            move_generator.process_outcome(reward, reward_fun);
+        } else {
+            move_generator.process_outcome(0, reward_fun);
+        }
     }
+
 }
 
 bool placer_needs_lookahead(const t_vpr_setup& vpr_setup) {

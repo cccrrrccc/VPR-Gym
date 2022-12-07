@@ -21,4 +21,4 @@ def read_WL_CPD():
 			PT = float(line.split()[3])
 		if ZMQTHeader in line:
 			ZMQT = float(line.split()[-1])
-	return WL, CPD, (PT - ZMQT)
+	return WL, CPD, PT

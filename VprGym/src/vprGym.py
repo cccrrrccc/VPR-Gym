@@ -40,7 +40,7 @@ def back_to_init_directory():
 			
 
 class VprEnv(Env):
-	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port):
+	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port, reward_func = 'WLbiased_runtime_aware'):
 		handle_directory(directory, seed, inner_num, 'off', port)
 		
 		# Socket setup
@@ -55,6 +55,7 @@ class VprEnv(Env):
 		, '--RL_gym_placement', 'on'
 		, '--RL_gym_placement_blk_type', 'off'
 		, '--RL_gym_port', port
+		, '--place_reward_fun', reward_func
 		])
 		self.addr = addr + port
 		self.socket.connect(self.addr)
@@ -110,7 +111,7 @@ class VprEnv(Env):
 		self.stage2 = True
 		
 class VprEnv_blk_type(Env):
-	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port):
+	def __init__(self, vtr_root = default_vtr_root_path, seed = default_seed, inner_num = default_inner_num, arch = default_arch, benchmark = default_benchmark, addr = default_addr, directory = default_directory, port = default_port, reward_func = 'WLbiased_runtime_aware'):
 		handle_directory(directory, seed, inner_num, 'on', port)	
 		
 		# Socket setup
@@ -126,6 +127,7 @@ class VprEnv_blk_type(Env):
 		, '--RL_gym_placement', 'on'
 		, '--RL_gym_placement_blk_type', 'on'
 		, '--RL_gym_port', port
+		, '--place_reward_fun', reward_func
 		])
 		self.addr = addr + port
 		self.socket.connect(self.addr)

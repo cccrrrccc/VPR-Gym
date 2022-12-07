@@ -2,3 +2,4 @@ pyzmq
 gym
 git+https://github.com/SMPyBandits/SMPyBandits.git#egg=SMPyBandits[full]
 torch
+pymoo

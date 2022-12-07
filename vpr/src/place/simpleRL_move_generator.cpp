@@ -149,10 +149,11 @@ RLGymGenerator::RLGymGenerator(size_t num_actions, const t_placer_opts& placer_o
     auto t1 = std::chrono::steady_clock::now();
     std::vector<zmq::message_t> msgs;
     msgs.push_back(zmq::message_t(std::to_string((int) num_actions)));
-    msgs.push_back(zmq::message_t(std::to_string(blk_type_set.size())));
+    msgs.push_back(zmq::message_t(std::to_string(blk_types.size())));
     msgs.push_back(zmq::message_t(std::to_string(move_lim)));
-    for (int i = 0; i < (int) blk_type_set.size(); i++) {
-        std::string name = std::vector<std::string>(blk_type_set.begin(), blk_type_set.end()).at((int) i);
+    for (int i = 0; i < (int) blk_types.size(); i++) {
+        //std::string name = std::vector<std::string>(blk_type_set.begin(), blk_type_set.end()).at((int) i);
+        std::string name = blk_types[i];
         msgs.push_back(zmq::message_t(std::to_string(blk_type_num[name])));
     }
     send_multipart(socket, msgs);
@@ -163,11 +164,16 @@ RLGymGenerator::RLGymGenerator(size_t num_actions, const t_placer_opts& placer_o
 
 void RLGymGenerator::find_all_types() {
     auto& cluster_ctx = g_vpr_ctx.clustering();
-    blk_type_set.clear();
+    //blk_type_set.clear();
     for (auto blk_id:cluster_ctx.clb_nlist.blocks()) {
         auto cluster_from_type = cluster_ctx.clb_nlist.block_type(blk_id);
         std::string str(cluster_from_type->name);
-        blk_type_set.insert(str);
+        //OLD INDEXING
+        //blk_type_set.insert(str);
+        if (std::find(blk_types.begin(), blk_types.end(), str) == blk_types.end()) {
+            blk_types.push_back(str);
+            blk_type_idx.push_back(cluster_from_type->index);
+        }
         if (blk_type_num.find(str) == blk_type_num.end()) {
             blk_type_num[str] = 1;
         }
@@ -208,7 +214,8 @@ e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affec
         size_t type = (size_t) std::stoi(msgs[1].to_string());
         // Use a local variable to store the std::string
         // In order to prevent undefined behaviour produced by c_str() losing initial string
-        std::string buffer = std::vector<std::string>(blk_type_set.begin(), blk_type_set.end()).at((int) type);
+        // std::string buffer = std::vector<std::string>(blk_type_set.begin(), blk_type_set.end()).at((int) type);
+        std::string buffer = blk_types[(int) type];
         const char* blk_type_name = buffer.c_str();
         last_action_ = action;
         auto t2 = std::chrono::steady_clock::now();

@@ -271,10 +271,12 @@ class RLGymGenerator: public MoveGenerator {
     zmq::context_t ctx;
     zmq::socket_t socket;
     size_t last_action_ = 0;
-    //std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
-    std::vector<double> time_elapsed_{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    std::vector<double> time_elapsed_{1.0, 3.6, 5.4, 2.5, 2.1, 0.8, 2.2};
+    //std::vector<double> time_elapsed_{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
     size_t num_available_actions_;
     std::set<std::string> blk_type_set;
+    std::vector<std::string> blk_types;
+    std::vector<int> blk_type_idx;
     std::map<std::string, int> blk_type_num;
     float elapsed_time = 0;
     bool reset_happened = false;
