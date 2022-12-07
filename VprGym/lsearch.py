@@ -52,7 +52,7 @@ def train(inner_num, seed, direct, gamma, ip, name):
 	
 if __name__ == '__main__':
 	direct = sys.argv[1]
-	g = sys.argv[2] # default 0.999
+	g = sys.argv[2] # default 0.9
 	ip = sys.argv[3]
 	name = sys.argv[4]
 	
