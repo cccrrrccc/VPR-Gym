@@ -14,7 +14,7 @@ def create_arm_feature(num_actions, num_types):
 
 def train(inner_num, seed, direct, gamma, ip, name):
 	np.random.seed(int(seed))
-	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'ng_' + name +'_' + str(gamma), benchmark = direct, reward_func = 'WLbiased')
+	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'Nevergrad_' + name +'_' + str(gamma), benchmark = direct, reward_func = 'WLbiased')
 	
 	arm_to_feature = list(np.arange(env.num_actions))
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('Nevergrad_TwopointsDE_' + name + '.log', 'w') as f:
+	with open('Nevergrad_2PDE_' + name + '.log', 'w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)
