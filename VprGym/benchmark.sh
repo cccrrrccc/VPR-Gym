@@ -5,6 +5,10 @@ b3='vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif'
 b4='vtr_flow/benchmarks/titan_blif/SLAM_spheric_stratixiv_arch_timing.blif'
 
 
-python3 exp3ELM.py $b3 0.01 7777 neuron &
-#python3 softmax.py $b3 0.01 7778 neuron &
-wait
+for i in 1 2 3
+do
+	python3 CR_exp3.py 0.1 1 $b1 $i 6665 stereo_vision &
+	python3 CR_exp3.py 0.1 2 $b1 $i 7775 stereo_vision &
+	python3 CR_exp3.py 0.1 3 $b1 $i 8885 stereo_vision &
+	wait
+done
