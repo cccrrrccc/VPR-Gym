@@ -64,7 +64,7 @@ if __name__ == '__main__':
 		CPD = 0
 		RT = 0
 		for seed in [0, 1, 2]:
-			a, b, c = train(inner_num, seed, direct, g, ip, name)
+			a, b, c = train(inner_num, seed, direct, ip, name)
 			WL += a
 			CPD += b
 			RT += c
