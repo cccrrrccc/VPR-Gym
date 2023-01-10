@@ -51,9 +51,8 @@ def train(inner_num, seed, direct, ip, name):
 	
 if __name__ == '__main__':
 	direct = sys.argv[1]
-	g = sys.argv[2] # default 0.9
-	ip = sys.argv[3]
-	name = sys.argv[4]
+	ip = sys.argv[2]
+	name = sys.argv[3]
 	
 	WLs = []
 	CPDs = []
