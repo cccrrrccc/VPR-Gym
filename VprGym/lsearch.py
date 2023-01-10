@@ -12,14 +12,14 @@ def create_arm_feature(num_actions, num_types):
 			arm_to_feature.append([i, j])
 	return arm_to_feature
 
-def train(inner_num, seed, direct, gamma, ip, name):
+def train(inner_num, seed, direct, ip, name):
 	np.random.seed(int(seed))
-	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'Nevergrad_' + name +'_' + str(gamma), benchmark = direct, reward_func = 'WLbiased')
+	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'Nevergrad_CMA' + name, benchmark = direct, reward_func = 'basic')
 	
 	arm_to_feature = list(np.arange(env.num_actions))
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
 	instrum = ng.p.Array(init=[0] * env.num_actions)
-	optimizer = ng.optimizers.TwoPointsDE(parametrization=instrum)
+	optimizer = ng.optimizers.CMA(parametrization=instrum)
 	done = False
 	max_reward = 0
 	acc_reward = 0
@@ -37,14 +37,13 @@ def train(inner_num, seed, direct, gamma, ip, name):
 		if info == 'stage2':
 			arm_to_feature = list(np.arange(env.num_actions))
 			instrum = ng.p.Array(init=[0] * env.num_actions)
-			optimizer = ng.optimizers.TwoPointsDE(parametrization=instrum)
+			optimizer = ng.optimizers.CMA(parametrization=instrum)
 			count = 0
 			continue
 		loss += -1 * reward
 		count += 1
 		# Batch size = 100
 		if count == 100:
-			G += float(gamma) * G + loss
 			optimizer.tell(Q, loss)
 			loss = 0
 			count = 0
@@ -72,7 +71,7 @@ if __name__ == '__main__':
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('Nevergrad_2PDE_' + name + '.log', 'w') as f:
+	with open('Nevergrad_CMA_' + name + '.log', 'w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)
