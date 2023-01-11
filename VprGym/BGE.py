@@ -14,14 +14,13 @@ def create_arm_feature(num_actions, num_types):
 
 def train(inner_num, seed, direct, g, ip, name):
 	np.random.seed(int(seed))
-	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'tps_' + name +'_' + str(g), benchmark = direct)
+	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'BGE_' + name +'_' + str(g), benchmark = direct)
 	
 	arm_to_feature = list(np.arange(env.num_actions))
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
-	agent = Policies.DiscountedThompson(nbArms = len(arm_to_feature), gamma=float(g))
+	agent = Policies.BoltzmannGumbel(nbArms = len(arm_to_feature))
 	done = False
-	max_reward = -1000
-	min_reward = 1000
+	max_reward = 0
 	rewards = []
 	while (done == False):
 		prediction = agent.choice()
@@ -30,22 +29,20 @@ def train(inner_num, seed, direct, g, ip, name):
 		
 		if info == 'stage2':
 			arm_to_feature = list(np.arange(env.num_actions))
-			agent = Policies.DiscountedThompson(nbArms = len(arm_to_feature), gamma=float(g))
+			agent = Policies.BoltzmannGumbel(nbArms = len(arm_to_feature))
 			continue
 		#normalize the reward
 		if (reward > max_reward):
 			max_reward = reward
-		if (reward < min_reward):
-			min_reward = reward
-		if (max_reward-min_reward != 0):
-			reward = (reward - min_reward) / (max_reward-min_reward)
+		if (max_reward != 0):
+			reward = reward / max_reward
 		rewards.append(reward)
 		agent.getReward(prediction, reward)
 	return info['WL'], info['CPD'], info['RT']
 	
 if __name__ == '__main__':
 	direct = sys.argv[1]
-	g = sys.argv[2] # default 0.99
+	g = sys.argv[2] # default 0.01
 	ip = sys.argv[3]
 	name = sys.argv[4]
 	
@@ -65,7 +62,7 @@ if __name__ == '__main__':
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('tps_' + gamma + '_' + name + '.log', 'w') as f:
+	with open('BGE_' + name + '.log', 'w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)
