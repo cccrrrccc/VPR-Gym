@@ -18,7 +18,7 @@ def train(inner_num, seed, direct, g, ip, name):
 	
 	arm_to_feature = list(np.arange(env.num_actions))
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
-	agent = Policies.BoltzmannGumbel(nbArms = len(arm_to_feature))
+	agent = Policies.BoltzmannGumbel(nbArms = len(arm_to_feature), C = float(g))
 	done = False
 	max_reward = 0
 	rewards = []
@@ -29,7 +29,7 @@ def train(inner_num, seed, direct, g, ip, name):
 		
 		if info == 'stage2':
 			arm_to_feature = list(np.arange(env.num_actions))
-			agent = Policies.BoltzmannGumbel(nbArms = len(arm_to_feature))
+			agent = Policies.BoltzmannGumbel(nbArms = len(arm_to_feature), C = float(g))
 			continue
 		#normalize the reward
 		if (reward > max_reward):
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('BGE_' + name + '.log', 'w') as f:
+	with open('BGE_' + g + '_' + name + '.log', 'w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)
