@@ -65,7 +65,7 @@ if __name__ == '__main__':
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('tps_' + gamma + '_' + name + '.log', 'w') as f:
+	with open('tps_' + g + '_' + name + '.log', 'w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)
