@@ -40,12 +40,7 @@ def train(inner_num, seed, direct, g, ip, name):
 		agent.getReward(prediction, reward)
 	return info['WL'], info['CPD'], info['RT']
 	
-if __name__ == '__main__':
-	direct = sys.argv[1]
-	g = sys.argv[2] # default 0.1
-	ip = sys.argv[3]
-	name = sys.argv[4]
-	
+def batch_train(direct, g, ip, name):
 	WLs = []
 	CPDs = []
 	RTs = []
@@ -67,3 +62,19 @@ if __name__ == '__main__':
 		print(WLs)
 		print(CPDs)
 		print(RTs)
+	return
+	
+if __name__ == '__main__':
+	directs = [
+	'vtr_flow/benchmarks/titan_blif/stereo_vision_stratixiv_arch_timing.blif',
+	'vtr_flow/benchmarks/titan_blif/SLAM_spheric_stratixiv_arch_timing.blif',
+	'vtr_flow/benchmarks/titan_blif/dart_stratixiv_arch_timing.blif'
+	]
+	names = ['stereo', 'SLAM', 'dart']
+	g = sys.argv[1]
+	ip = sys.argv[2]
+	
+	assert(len(directs) == len(names))
+	
+	for i in range(len(directs)):
+		batch_train(directs[i], g, ip, names[i])
