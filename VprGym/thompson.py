@@ -39,13 +39,15 @@ def train(inner_num, seed, direct, g, ip, name):
 			min_reward = reward
 		if (max_reward-min_reward != 0):
 			reward = (reward - min_reward) / (max_reward-min_reward)
+		else:
+			reward = 0
 		rewards.append(reward)
 		agent.getReward(prediction, reward)
 	return info['WL'], info['CPD'], info['RT']
 	
 if __name__ == '__main__':
 	direct = sys.argv[1]
-	g = sys.argv[2] # default 0.99
+	g = sys.argv[2] # default 0.9999
 	ip = sys.argv[3]
 	name = sys.argv[4]
 	
