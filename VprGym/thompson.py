@@ -14,7 +14,7 @@ def create_arm_feature(num_actions, num_types):
 
 def train(inner_num, seed, direct, g, ip, name):
 	np.random.seed(int(seed))
-	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'tps_' + name +'_' + str(g), benchmark = direct)
+	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'tps_' + name +'_' + str(g), benchmark = direct, reward_func = 'basic')
 	
 	arm_to_feature = list(np.arange(env.num_actions))
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('tps_' + g + '_' + name + '.log', 'w') as f:
+	with open('Tps_' + g + '_' + name + '.log', 'w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)
