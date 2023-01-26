@@ -66,13 +66,11 @@ def batch_train(direct, g, ip, name):
 	
 if __name__ == '__main__':
 	directs = [
-	'vtr_flow/benchmarks/titan_blif/gsm_switch_stratixiv_arch_timing.blif',
-	'vtr_flow/benchmarks/titan_blif/bitonic_mesh_stratixiv_arch_timing.blif',
 	'vtr_flow/benchmarks/titan_blif/mes_noc_stratixiv_arch_timing.blif',
 	'vtr_flow/benchmarks/titan_blif/denoise_stratixiv_arch_timing.blif',
 	'vtr_flow/benchmarks/titan_blif/cholesky_mc_stratixiv_arch_timing.blif'
 	]
-	names = ['gsm', 'bitonic', 'mes', 'denoise', 'cholesky_mc']
+	names = ['mes', 'denoise', 'cholesky_mc']
 	g = sys.argv[1]
 	ip = sys.argv[2]
 	
