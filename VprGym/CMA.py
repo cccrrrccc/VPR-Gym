@@ -12,14 +12,14 @@ def create_arm_feature(num_actions, num_types):
 			arm_to_feature.append([i, j])
 	return arm_to_feature
 
-def train(inner_num, seed, direct, gamma, ip, name):
+def train(inner_num, seed, direct, ip, name):
 	np.random.seed(int(seed))
-	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'CMA_' + name +'_' + str(gamma), benchmark = direct, reward_func = 'basic')
+	env = VprEnv(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'CMA_' + name, benchmark = direct, reward_func = 'basic')
 	
 	arm_to_feature = list(np.arange(env.num_actions))
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
 	instrum = ng.p.Array(init=[0] * env.num_actions)
-	optimizer = ng.optimizers.TBPSA(parametrization=instrum)
+	optimizer = ng.optimizers.CMA(parametrization=instrum)
 	done = False
 	max_reward = 0
 	acc_reward = 0
@@ -37,7 +37,7 @@ def train(inner_num, seed, direct, gamma, ip, name):
 		if info == 'stage2':
 			arm_to_feature = list(np.arange(env.num_actions))
 			instrum = ng.p.Array(init=[0] * env.num_actions)
-			optimizer = ng.optimizers.TBPSA(parametrization=instrum)
+			optimizer = ng.optimizers.CMA(parametrization=instrum)
 			count = 0
 			continue
 		loss += -1 * reward
@@ -59,7 +59,7 @@ def batch_train(direct, g, ip, name):
 		CPD = 0
 		RT = 0
 		for seed in [0, 1, 2]:
-			a, b, c = train(inner_num, seed, direct, g, ip, name)
+			a, b, c = train(inner_num, seed, direct, ip, name)
 			WL += a
 			CPD += b
 			RT += c
@@ -85,10 +85,8 @@ if __name__ == '__main__':
 	]
 	names = ['stereo', 'bitonic', 'neuron', 'SLAM', 'dart', 'mes', 'denoise', 'cholesky_mc']
 	assert(len(directs) == len(names))
-	g = sys.argv[1]
-	ip = sys.argv[2]
+	ip = sys.argv[1]
 	
-	assert(len(directs) == len(names))
 	
 	for i in range(len(directs)):
-		batch_train(directs[i], g, ip, names[i])
+		batch_train(directs[i], ip, names[i])
