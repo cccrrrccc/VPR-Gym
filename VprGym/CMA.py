@@ -49,7 +49,7 @@ def train(inner_num, seed, direct, ip, name):
 			count = 0
 	return info['WL'], info['CPD'], info['RT']
 	
-def batch_train(direct, g, ip, name):
+def batch_train(direct, ip, name):
 	WLs = []
 	CPDs = []
 	RTs = []
