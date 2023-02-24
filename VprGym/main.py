@@ -75,11 +75,8 @@ if __name__ == '__main__':
 		if info == 'reset':
 			trusts = agent.trusts.copy()
 			Explore_Prob = 0.01
-			print(trusts)
 			weights = np.matmul(trusts[:, None], np.array(probs)[None, :]).flatten()
-			print(weights)
 			arm_features = stage1_arm_feature(env.num_actions, env.num_types)
-			print(arm_features)
 			agent = Policies.Exp3ELM(nbArms = len(arm_features), delta = 0.01, unbiased = True)
 			agent.weights = weights.copy()
 			continue
