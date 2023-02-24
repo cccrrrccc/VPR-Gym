@@ -43,19 +43,18 @@ def train(inner_num, seed, direct, g, ip, name):
 	env = VprEnv_blk_type(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'SoftBLK_' + name +'_' + str(g), benchmark = direct, reward_func = 'basic')
 	
 	arm_features = stage1_arm_feature(env.num_actions, env.num_types)
-	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
-	softmax = Policies.Softmax(nbArms = len(arm_to_feature), temperature=float(g))
+	softmax = Policies.Softmax(nbArms = len(arm_features), temperature=float(g))
 	done = False
 	max_reward = 0
 	rewards = []
 	while (done == False):
 		prediction = softmax.choice()
-		action = arm_to_feature[prediction]
+		action = arm_features[prediction]
 		_, reward, done, info = env.step(action)
 		
 		if info == 'stage2':
-			arm_to_feature = stage2_arm_feature(env.num_actions, env.num_types)
-			softmax = Policies.Softmax(nbArms = len(arm_to_feature), temperature=float(g))
+			arm_features = stage2_arm_feature(env.num_actions, env.num_types)
+			softmax = Policies.Softmax(nbArms = len(arm_features), temperature=float(g))
 			continue
 		#normalize the reward
 		if (reward > max_reward):
