@@ -22,7 +22,6 @@ def train(inner_num, seed, direct, g, ip, name):
 	done = False
 	max_reward = -1000
 	min_reward = 1000
-	rewards = []
 	while (done == False):
 		prediction = agent.choice()
 		action = arm_to_feature[prediction]
@@ -41,7 +40,6 @@ def train(inner_num, seed, direct, g, ip, name):
 			reward = (reward - min_reward) / (max_reward-min_reward)
 		else:
 			reward = 0
-		rewards.append(reward)
 		agent.getReward(prediction, reward)
 	return info['WL'], info['CPD'], info['RT']
 	

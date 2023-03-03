@@ -45,8 +45,8 @@ def train(inner_num, seed, direct, g, ip, name):
 	arm_features = stage1_arm_feature(env.num_actions, env.num_types)
 	agent = Policies.DiscountedThompson(nbArms = len(arm_features), gamma=float(g))
 	done = False
-	max_reward = 0
-	rewards = []
+	max_reward = -1000
+	min_reward = 1000
 	while (done == False):
 		prediction = agent.choice()
 		action = arm_features[prediction]
@@ -57,11 +57,15 @@ def train(inner_num, seed, direct, g, ip, name):
 			agent = Policies.DiscountedThompson(nbArms = len(arm_features), gamma=float(g))
 			continue
 		#normalize the reward
+		#normalize the reward
 		if (reward > max_reward):
 			max_reward = reward
-		if (max_reward != 0):
-			reward = reward / max_reward
-		rewards.append(reward)
+		if (reward < min_reward):
+			min_reward = reward
+		if (max_reward-min_reward != 0):
+			reward = (reward - min_reward) / (max_reward-min_reward)
+		else:
+			reward = 0
 		agent.getReward(prediction, reward)
 	return info['WL'], info['CPD'], info['RT']
 	
