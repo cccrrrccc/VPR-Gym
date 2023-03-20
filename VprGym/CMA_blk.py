@@ -40,12 +40,12 @@ def stage2_weights(num_actions, probs):
 
 def train(inner_num, seed, direct, g, ip, name):
 	np.random.seed(int(seed))
-	env = VprEnv_blk_type(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'TBPSA_BLK_' + name +'_' + str(g), benchmark = direct, reward_func = 'basic')
+	env = VprEnv_blk_type(inner_num = float(inner_num), port = ip, seed = int(seed), directory = 'CMA_BLK_' + name +'_' + str(g), benchmark = direct, reward_func = 'basic')
 	
 	arm_features = stage1_arm_feature(env.num_actions, env.num_types)
 	#arm_to_feature = create_arm_feature(env.num_actions, env.num_types)
 	instrum = ng.p.Array(init=[0] * len(arm_features))
-	optimizer = ng.optimizers.TBPSA(parametrization=instrum)
+	optimizer = ng.optimizers.CMA(parametrization=instrum)
 	done = False
 	max_reward = 0
 	acc_reward = 0
@@ -63,7 +63,7 @@ def train(inner_num, seed, direct, g, ip, name):
 		if info == 'stage2':
 			arm_features = stage2_arm_feature(env.num_actions, env.num_types)
 			instrum = ng.p.Array(init=[0] * len(arm_features))
-			optimizer = ng.optimizers.TBPSA(parametrization=instrum)
+			optimizer = ng.optimizers.CMA(parametrization=instrum)
 			count = 0
 			continue
 		loss += -1 * reward
@@ -92,7 +92,7 @@ def batch_train(direct, g, ip, name):
 		WLs.append(WL / 3)
 		CPDs.append(CPD / 3)
 		RTs.append(RT / 3)
-	with open('TBPSA_BLK_' + name + '.log', 'w') as f:
+	with open('CMA_BLK_' + name + '.log', 'w') as f:
 		sys.stdout = f
 		print(WLs)
 		print(CPDs)
@@ -100,11 +100,13 @@ def batch_train(direct, g, ip, name):
 		
 if __name__ == '__main__':
 	directs = [
-	'vtr_flow/benchmarks/titan_blif/denoise_stratixiv_arch_timing.blif',
-	'vtr_flow/benchmarks/titan_blif/cholesky_mc_stratixiv_arch_timing.blif',
-	'vtr_flow/benchmarks/titan_blif/mes_noc_stratixiv_arch_timing.blif',
+	'vtr_flow/benchmarks/titan_blif/stereo_vision_stratixiv_arch_timing.blif',
+	'vtr_flow/benchmarks/titan_blif/bitonic_mesh_stratixiv_arch_timing.blif',
+	'vtr_flow/benchmarks/titan_blif/neuron_stratixiv_arch_timing.blif',
+	'vtr_flow/benchmarks/titan_blif/SLAM_spheric_stratixiv_arch_timing.blif',
+	'vtr_flow/benchmarks/titan_blif/dart_stratixiv_arch_timing.blif'
 	]
-	names = ['denoise', 'cholesky_mc', 'mes']
+	names = ['stereo', 'bitonic', 'neuron', 'SLAM', 'dart']
 	g = sys.argv[1]
 	ip = sys.argv[2]
 	
