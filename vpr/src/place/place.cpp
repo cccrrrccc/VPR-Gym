@@ -3082,13 +3082,16 @@ static void calculate_reward_and_process_outcome(
     e_reward_function reward_fun = string_to_reward(reward_fun_string);
 
     if (reward_fun == BASIC) {
-        move_generator.process_outcome(-1 * delta_c, reward_fun);
+        //move_generator.process_outcome(-1 * delta_c, reward_fun);
+        move_generator.process_outcome(-1 * delta_c, reward_fun, delta_c, move_outcome_stats.delta_bb_cost_norm, move_outcome_stats.delta_timing_cost_norm);
     } else if (reward_fun == NON_PENALIZING_BASIC
                || reward_fun == RUNTIME_AWARE) {
         if (delta_c < 0) {
-            move_generator.process_outcome(-1 * delta_c, reward_fun);
+            //move_generator.process_outcome(-1 * delta_c, reward_fun);
+            move_generator.process_outcome(-1 * delta_c, reward_fun, delta_c, move_outcome_stats.delta_bb_cost_norm, move_outcome_stats.delta_timing_cost_norm);
         } else {
-            move_generator.process_outcome(0, reward_fun);
+            //move_generator.process_outcome(0, reward_fun);
+            move_generator.process_outcome(0, reward_fun, delta_c, move_outcome_stats.delta_bb_cost_norm, move_outcome_stats.delta_timing_cost_norm);
         }
     } else if (reward_fun == WL_BIASED_RUNTIME_AWARE) {
         if (delta_c < 0) {
@@ -3098,9 +3101,11 @@ static void calculate_reward_and_process_outcome(
                                     * move_outcome_stats.delta_timing_cost_norm
                               + timing_bb_factor
                                     * move_outcome_stats.delta_bb_cost_norm);
-            move_generator.process_outcome(reward, reward_fun);
+            //move_generator.process_outcome(reward, reward_fun);
+            move_generator.process_outcome(reward, reward_fun, delta_c, move_outcome_stats.delta_bb_cost_norm, move_outcome_stats.delta_timing_cost_norm);
         } else {
-            move_generator.process_outcome(0, reward_fun);
+            //move_generator.process_outcome(0, reward_fun);
+            move_generator.process_outcome(0, reward_fun, delta_c, move_outcome_stats.delta_bb_cost_norm, move_outcome_stats.delta_timing_cost_norm);
         }
     } else if (reward_fun == WL_BIASED) {
         if (delta_c < 0) {
@@ -3110,9 +3115,9 @@ static void calculate_reward_and_process_outcome(
                                     * move_outcome_stats.delta_timing_cost_norm
                               + timing_bb_factor
                                     * move_outcome_stats.delta_bb_cost_norm);
-            move_generator.process_outcome(reward, reward_fun);
+            move_generator.process_outcome(reward, reward_fun, delta_c, move_outcome_stats.delta_bb_cost_norm, move_outcome_stats.delta_timing_cost_norm);
         } else {
-            move_generator.process_outcome(0, reward_fun);
+            move_generator.process_outcome(0, reward_fun, delta_c, move_outcome_stats.delta_bb_cost_norm, move_outcome_stats.delta_timing_cost_norm);
         }
     }
 

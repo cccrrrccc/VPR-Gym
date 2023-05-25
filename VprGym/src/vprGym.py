@@ -95,9 +95,16 @@ class VprEnv(Env):
 			info = 'stage2'
 			reward = 0
 			self.change_stage()
-		else:
+		else:	
+			# Receive the reward from VPR
+			# Tokenize the message to get reward/delta/delta_bb/delta_time 
 			done = False
-			reward = float(msg.decode('utf-8'))
+			tokens = msg.decode('utf-8').split()
+			assert(len(tokens) == 4)
+			reward = float(tokens[0])
+			info['delta'] = float(tokens[1])
+			info['delta_bb'] = float(tokens[2])
+			info['delta_time'] = float(tokens[3])
 		return self.state, reward, done, info
 		
 	def render(self):
@@ -172,8 +179,15 @@ class VprEnv_blk_type(Env):
 			reward = 0
 			self.change_stage()
 		else:
+			# Receive the reward from VPR
+			# Tokenize the message to get reward/delta/delta_bb/delta_time 
 			done = False
-			reward = float(msg.decode('utf-8'))
+			tokens = msg.decode('utf-8').split()
+			assert(len(tokens) == 4)
+			reward = float(tokens[0])
+			info['delta'] = float(tokens[1])
+			info['delta_bb'] = float(tokens[2])
+			info['delta_time'] = float(tokens[3])
 		return self.state, reward, done, info
 		
 	def render(self):

@@ -65,7 +65,7 @@ class MoveGenerator {
      *  @param reward: the value of the agent's reward
      *  @param reward_fun: the name of the reward function used
      */
-    virtual void process_outcome(double /*reward*/, e_reward_function /*reward_fun*/) {}
+    virtual void process_outcome(double /*reward*/, e_reward_function /*reward_fun*/, double /*delta_c*/, double /*delta_bb_cost_norm*/, double /*delta_timing_cost_norm*/) {}
 };
 
 #endif

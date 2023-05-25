@@ -25,7 +25,12 @@ def train(inner_num, seed, direct, gamma, ip, name):
 	acc_reward = 0
 	G = 0
 	count = 0
+	epoch = 0
 	loss = 0
+	rewards = []
+	SDict = {'1': 0, '-1': 0}
+	states = []
+	accs = []
 	while (done == False):
 		if count == 0:
 			Q = optimizer.ask()
@@ -39,14 +44,34 @@ def train(inner_num, seed, direct, gamma, ip, name):
 			instrum = ng.p.Array(init=[0] * env.num_actions)
 			optimizer = ng.optimizers.TBPSA(parametrization=instrum)
 			count = 0
+			epoch = 0
 			continue
 		loss += -1 * reward
 		count += 1
+		epoch += 1
 		# Batch size = 100
+		rewards.append(reward)
+		if reward > 0:
+			states.append(1)
+			SDict['1'] += 1
+		else:
+			states.append(-1)
+			SDict['-1'] += 1
 		if count == 100:
 			optimizer.tell(Q, loss)
 			loss = 0
 			count = 0
+		if epoch == env.horizon:
+			accs.append(SDict['1'] / (SDict['1']+SDict['-1']))
+			SDict['1'] = 0
+			SDict['-1'] = 0
+			epoch = 0
+	plt.scatter(range(len(rewards)), rewards)
+	plt.savefig('rewards.png')
+	plt.clf()
+	plt.scatter(range(len(accs)), accs)
+	plt.savefig('accs.png')
+	print(accs)
 	return info['WL'], info['CPD'], info['RT']
 	
 def batch_train(direct, g, ip, name):
@@ -54,11 +79,11 @@ def batch_train(direct, g, ip, name):
 	CPDs = []
 	RTs = []
 	
-	for inner_num in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]:
+	for inner_num in [0.1]:
 		WL = 0
 		CPD = 0
 		RT = 0
-		for seed in [0, 1, 2]:
+		for seed in [2]:
 			a, b, c = train(inner_num, seed, direct, g, ip, name)
 			WL += a
 			CPD += b
@@ -74,11 +99,9 @@ def batch_train(direct, g, ip, name):
 		
 if __name__ == '__main__':
 	directs = [
-	'vtr_flow/benchmarks/titan_blif/mes_noc_stratixiv_arch_timing.blif',
-	'vtr_flow/benchmarks/titan_blif/denoise_stratixiv_arch_timing.blif',
-	'vtr_flow/benchmarks/titan_blif/cholesky_mc_stratixiv_arch_timing.blif'
+	'vtr_flow/benchmarks/titan_blif/stereo_vision_stratixiv_arch_timing.blif'
 	]
-	names = ['mes', 'denoise', 'cholesky_mc']
+	names = ['stereo_test']
 	g = sys.argv[1]
 	ip = sys.argv[2]
 	

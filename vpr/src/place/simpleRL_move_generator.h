@@ -254,7 +254,7 @@ class SimpleRLMoveGenerator : public MoveGenerator {
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
     e_create_move propose_move_with_type(t_pl_blocks_to_be_moved& /*blocks_affected*/, e_move_type& /*move_type*/, float /*rlim*/, const t_placer_opts& /*placer_opts*/, const PlacerCriticalities* /*criticalities*/, const char* /*blk_type_name*/) {return e_create_move::ABORT;}
     // Recieves feedback about the outcome of the previously proposed move
-    void process_outcome(double reward, e_reward_function reward_fun);
+    void process_outcome(double reward, e_reward_function reward_fun, double /*delta_c*/, double /*delta_bb_cost_norm*/, double /*delta_timing_cost_norm*/);
 
 };
 
@@ -284,7 +284,7 @@ class RLGymGenerator: public MoveGenerator {
     RLGymGenerator(size_t num_actions, const t_placer_opts& placer_opts, int move_lim);
     ~RLGymGenerator();
     e_create_move propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities);
-    void process_outcome(double reward, e_reward_function reward_fun);
+    void process_outcome(double reward, e_reward_function reward_fun, double delta_c, double delta_bb_cost_norm, double delta_timing_cost_norm);
     e_create_move propose_move_with_type(t_pl_blocks_to_be_moved& /*blocks_affected*/, e_move_type& /*move_type*/, float /*rlim*/, const t_placer_opts& /*placer_opts*/, const PlacerCriticalities* /*criticalities*/, const char* /*blk_type_name*/) {return e_create_move::ABORT;}
     void find_all_types();
     void reset_agent();

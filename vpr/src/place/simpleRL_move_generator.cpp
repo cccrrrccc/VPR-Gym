@@ -125,7 +125,7 @@ e_create_move SimpleRLMoveGenerator::propose_move(t_pl_blocks_to_be_moved& block
     return move;
 }
 
-void SimpleRLMoveGenerator::process_outcome(double reward, e_reward_function reward_fun) {
+void SimpleRLMoveGenerator::process_outcome(double reward, e_reward_function reward_fun, double /*delta_c*/, double /*delta_bb_cost_norm*/, double /*delta_timing_cost_norm*/) {
     karmed_bandit_agent->process_outcome(reward, reward_fun);
 }
 
@@ -241,10 +241,10 @@ e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affec
     }
 }
 
-void RLGymGenerator::process_outcome(double reward, e_reward_function reward_fun) {
+void RLGymGenerator::process_outcome(double reward, e_reward_function reward_fun, double delta_c, double delta_bb_cost_norm, double delta_timing_cost_norm) {
     if (reward_fun == RUNTIME_AWARE || reward_fun == WL_BIASED_RUNTIME_AWARE)
         reward /= time_elapsed_[last_action_];
-    zmq::message_t msg(std::to_string(reward));
+    zmq::message_t msg(std::to_string(reward) + ' ' + std::to_string(delta_c) + ' ' + std::to_string(delta_bb_cost_norm) + ' ' + std::to_string(delta_timing_cost_norm));
     auto t1 = std::chrono::steady_clock::now();
     socket.send(msg, zmq::send_flags::none);
     auto t2 = std::chrono::steady_clock::now();
