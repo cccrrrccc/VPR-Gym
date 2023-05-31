@@ -10,15 +10,23 @@ source .venv/bin/activate
 pip install -r requirements.txt
 make
 ```
+2. Download Titan Benchmarks
 
-2. Install cppzmq.
+Following the instruction [here](https://docs.verilogtorouting.org/en/latest/tutorials/titan_benchmarks/#titan-benchmarks-tutorial).
+
+3. Install cppzmq.
 
 Following the instruction in [cppzmq](https://github.com/zeromq/cppzmq).
 
-3. Install required dependencies for VPR-Gym
+4. Install required dependencies for VPR-Gym
 ```
 cd ./VprGym
 pip install -r requirements.txt
+```
+5. Run Example
+```
+cd ./VprGym
+python3 example.py
 ```
 ## Introduction
 VTR-Gym project is a world-wide collaborative effort to provide an open-source framework for conducting FPGA architecture and CAD research and development.
