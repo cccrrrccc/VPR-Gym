@@ -1,9 +1,24 @@
-# Verilog to Routing (VTR)
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/verilog-to-routing/vtr-verilog-to-routing.git)
-[![Build Status](https://github.com/verilog-to-routing/vtr-verilog-to-routing/workflows/Test/badge.svg)](https://github.com/verilog-to-routing/vtr-verilog-to-routing/actions?query=workflow%3ATest) [![Documentation Status](https://readthedocs.org/projects/vtr/badge/?version=latest)](http://docs.verilogtorouting.org/en/latest/)
+# VTR-Gym
 
+## Installation
+
+1. Building VTR.
+```
+./install_apt_packages.sh
+make env
+source .venv/bin/activate
+pip install -r requirements.txt
+make
+```
+2. Install cppzmq
+Check [cppzmq](https://github.com/zeromq/cppzmq)
+3. Install required dependencies for VPR-Gym
+```
+cd ./VprGym
+pip install -r requirements.txt
+```
 ## Introduction
-The Verilog-to-Routing (VTR) project is a world-wide collaborative effort to provide an open-source framework for conducting FPGA architecture and CAD research and development.
+VTR-Gym project is a world-wide collaborative effort to provide an open-source framework for conducting FPGA architecture and CAD research and development.
 The VTR design flow takes as input a Verilog description of a digital circuit, and a description of the target FPGA architecture.
 It then performs:
   * Elaboration & Synthesis (ODIN II)
