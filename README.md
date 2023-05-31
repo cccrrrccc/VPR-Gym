@@ -10,8 +10,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 make
 ```
-2. Install cppzmq
-Check [cppzmq](https://github.com/zeromq/cppzmq)
+
+2. Install cppzmq.
+
+Following the instruction in [cppzmq](https://github.com/zeromq/cppzmq).
+
 3. Install required dependencies for VPR-Gym
 ```
 cd ./VprGym
