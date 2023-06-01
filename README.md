@@ -77,26 +77,6 @@ Bibtex:
 ## Download
 For most users of VTR (rather than active developers) you should download the [latest official VTR release](https://verilogtorouting.org/download), which has been fully regression tested.
 
-## Building
-On unix-like systems run `make` from the root VTR directory.
-
-For more details see the [building instructions](BUILDING.md).
-
-#### Docker
-We provide a Dockerfile that sets up all the necessary packages for VTR to run.
-For more details see [here](dev/DOCKER_DEPLOY.md).
-
-## Mailing Lists
-If you have questions, or want to keep up-to-date with VTR, consider joining our mailing lists:
-
-[VTR-Announce](https://groups.google.com/forum/#!forum/vtr-announce): VTR release announcements (low traffic)
-
-[VTR-Users](https://groups.google.com/forum/#!forum/vtr-users): Discussions about using VTR
-
-[VTR-Devel](https://groups.google.com/forum/#!forum/vtr-devel): Discussions about VTR development
-
-[VTR-Commits](https://groups.google.com/forum/#!forum/vtr-commits): VTR revision control commits
-
 ## Development
 This is the development trunk for the Verilog-to-Routing project.
 Unlike the nicely packaged releases that we create, you are working with code in a constant state of flux.
@@ -113,25 +93,5 @@ In addition to measuring QoR and functionality automatically on pull requests, w
 *IMPORTANT*: A broken build must be fixed at top priority. You break the build if your commit breaks any of the automated regression tests.
 
 For additional information see the [developer README](README.developers.md).
-
-### Contributing to VTR
-If you'd like to contribute to VTR see our [Contribution Guidelines](CONTRIBUTING.md).
-
-## Contributors
-*Please keep this up-to-date*
-
-Professors: Kenneth Kent, Vaughn Betz, Jonathan Rose, Jason Anderson, Peter Jamieson
-
-Research Assistants: Aaron Graham
-
-
-Graduate Students: Kevin Murray, Jason Luu, Oleg Petelin, Xifian Tang, Mohamed Elgammal, Mohamed Eldafrawy, Jeffrey Goeders, Chi Wai Yu, Andrew Somerville, Ian Kuon, Alexander Marquardt, Andy Ye, Wei Mark Fang, Tim Liu, Charles Chiasson, Panagiotis (Panos) Patros, Jean-Philippe Legault, Aaron Graham, Nasrin Eshraghi Ivari, Maria Patrou, Scott Young, Sarah Khalid, Seyed Alireza Damghani, Harpreet Kaur
-
-
-Summer Students: Opal Densmore, Ted Campbell, Cong Wang, Peter Milankov, Scott Whitty, Michael Wainberg, Suya Liu, Miad Nasr, Nooruddin Ahmed, Thien Yu, Long Yu Wang, Matthew J.P. Walker, Amer Hesson, Sheng Zhong, Hanqing Zeng, Vidya Sankaranarayanan, Jia Min Wang, Eugene Sha, Jean-Philippe Legault, Richard Ren, Dingyu Yang, Alexandrea Demmings, Hillary Soontiens, Julie Brown, Bill Hu, David Baines, Mahshad Farahani, Helen Dai, Daniel Zhai
-
-Companies: Intel, Huawei, Lattice, Altera Corporation, Texas Instruments, Google, Antmicro
-
-Funding Agencies: NSERC, Semiconductor Research Corporation
 
 
