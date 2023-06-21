@@ -29,25 +29,7 @@ cd ./VprGym
 python3 example.py
 ```
 ## Introduction
-VTR-Gym project is a world-wide collaborative effort to provide an open-source framework for conducting FPGA architecture and CAD research and development.
-The VTR design flow takes as input a Verilog description of a digital circuit, and a description of the target FPGA architecture.
-It then performs:
-  * Elaboration & Synthesis (ODIN II)
-  * Logic Optimization & Technology Mapping (ABC)
-  * Packing, Placement, Routing & Timing Analysis (VPR)
-
-to generate FPGA speed and area results.
-VTR includes a set of benchmark designs known to work with the design flow.
-
-VTR can also produce [FASM](https://symbiflow.readthedocs.io/en/latest/fasm/docs/specification.html) to program some commercial FPGAs (via [Symbiflow](https://symbiflow.github.io/))
-
-| Placement (carry-chains highlighted) | Critical Path |
-| ------------------------------------ | ------------- |
-| <img src="https://verilogtorouting.org/img/des90_placement_macros.gif" width="350"/> | <img src="https://verilogtorouting.org/img/des90_cpd.gif" width="350"/> |
-
-| Logical Connections | Routing Utilziation |
-| ------------------- | ------------------- |
-| <img src="https://verilogtorouting.org/img/des90_nets.gif" width="350"/> | <img src="https://verilogtorouting.org/img/des90_routing_util.gif" width="350"/> |
+VTR-Gym project is a platform for exploring AI techniques in FPGA placement optimization. VTR-Gym connects [OpenAI Gym](https://www.gymlibrary.dev/) and [VTR](https://verilogtorouting.org/) in order to achieve seamless integration between  Python-based machine learning libraries and VTR. 
 
 
 ## Documentation
