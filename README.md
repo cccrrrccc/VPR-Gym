@@ -40,16 +40,8 @@ The Verilog to Routing (VTR) project is an open-source framework for conducting 
 ## How to Cite
 The following paper may be used as a general citation for VTR:
 
-K. E. Murray, O. Petelin, S. Zhong, J. M. Wang, M. ElDafrawy, J.-P. Legault, E. Sha, A. G. Graham, J. Wu, M. J. P. Walker, H. Zeng, P. Patros, J. Luu, K. B. Kent and V. Betz "VTR 8: High Performance CAD and Customizable FPGA Architecture Modelling", ACM TRETS, 2020.
-
 Bibtex:
 ```
-@article{vtr8,
-  title={VTR 8: High Performance CAD and Customizable FPGA Architecture Modelling},
-  author={Murray, Kevin E. and Petelin, Oleg and Zhong, Sheng and Wang, Jai Min and ElDafrawy, Mohamed and Legault, Jean-Philippe and Sha, Eugene and Graham, Aaron G. and Wu, Jean and Walker, Matthew J. P. and Zeng, Hanqing and Patros, Panagiotis and Luu, Jason and Kent, Kenneth B. and Betz, Vaughn},
-  journal={ACM Trans. Reconfigurable Technol. Syst.},
-  year={2020}
-}
 ```
 
 
