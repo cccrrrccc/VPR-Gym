@@ -38,8 +38,11 @@ The Verilog to Routing (VTR) project is an open-source framework for conducting 
 ## Examples
 
 ## Basic Interface
+1. Example python script.
+```
 
-
+```
+Please refer to our paper for a detailed description.
 ## How to Cite
 The following paper may be used as a general citation for VTR:
 
