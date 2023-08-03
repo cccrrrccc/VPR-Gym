@@ -159,7 +159,7 @@ RLGymGenerator::RLGymGenerator(size_t num_actions, const t_placer_opts& placer_o
     send_multipart(socket, msgs);
     auto t2 = std::chrono::steady_clock::now();
 
-    elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
+    //elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
 }
 
 void RLGymGenerator::find_all_types() {
@@ -194,8 +194,7 @@ RLGymGenerator::~RLGymGenerator() {
     recv_multipart(socket, std::back_inserter(msgs));
     socket.send(msg, zmq::send_flags::none);
     auto t2 = std::chrono::steady_clock::now();
-    elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
-    VTR_LOG("Zeromq elapsed time (seconds): %f\n", elapsed_time);
+    //elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
 }
 
 e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affected, e_move_type& move_type, float rlim, const t_placer_opts& placer_opts, const PlacerCriticalities* criticalities) {
@@ -219,7 +218,7 @@ e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affec
         const char* blk_type_name = buffer.c_str();
         last_action_ = action;
         auto t2 = std::chrono::steady_clock::now();
-        elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
+        //elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
 
         move_type = (e_move_type) action;
         e_create_move move = avail_moves[(int)move_type]->propose_move_with_type(blocks_affected, move_type, rlim, placer_opts, criticalities, blk_type_name);
@@ -233,7 +232,7 @@ e_create_move RLGymGenerator::propose_move(t_pl_blocks_to_be_moved& blocks_affec
         size_t action = (size_t) std::stoi(str);
         last_action_ = action;
         auto t2 = std::chrono::steady_clock::now();
-        elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
+        //elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
 
         move_type = (e_move_type) action;
         e_create_move move = avail_moves[(int)move_type]->propose_move(blocks_affected, move_type, rlim, placer_opts, criticalities);
@@ -248,7 +247,7 @@ void RLGymGenerator::process_outcome(double reward, e_reward_function reward_fun
     auto t1 = std::chrono::steady_clock::now();
     socket.send(msg, zmq::send_flags::none);
     auto t2 = std::chrono::steady_clock::now();
-    elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
+    //elapsed_time += float(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) / 1000000;
 }
 
 void RLGymGenerator::reset_agent() {
