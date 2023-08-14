@@ -28,6 +28,8 @@ pip install -r requirements.txt
 cd ./VprGym
 python3 example.py
 ```
+
+It is important to use the VprGym as the RL agent's working directory.
 ## Introduction
 VTR-Gym project is a platform for exploring AI techniques in FPGA placement optimization. VTR-Gym connects [OpenAI Gym](https://www.gymlibrary.dev/) and [VTR](https://verilogtorouting.org/) in order to achieve seamless integration between  Python-based machine learning libraries and VTR, which allows researchers to focus on high-level algorithm design and reduces the engineering efforts required for transplanting ML libraries from Python to C++.
 
@@ -40,10 +42,39 @@ The Verilog to Routing (VTR) project is an open-source framework for conducting 
 ## Basic Interface
 1. Example Python script.
 ```
+from src.vprGym import VprEnv, VprEnv_blk_type
+import Agent
 
+env = VprEnv()
+agent = Agent.Agent()
+done = False
+
+while (done == False):
+  action = agent.get_action()
+  _, reward, done, info = env.step(action)
+  agent.update(reward)
+
+env.close()
 ```
 2. Parallel processing environments
 ```
+from src.vprGym import VprEnv, VprEnv_blk_type
+import Agent
+import os
+
+# In order to parallelly run two or more environments
+# It is necessary to assign different port numbers for communication purposes
+env1 = VprEnv(port = '5555')
+agent1 = Agent.Agent()
+env2 = VprEnv_blk_type(port = '6666')
+agent2 = Agent.Agent()
+
+pid = os.fork()
+if pid > 0:
+  train(env1, agent1)
+else:
+  train(env2, agent2)
+
 ```
 Please refer to our paper for a detailed description.
 ## How to Cite
