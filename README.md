@@ -38,7 +38,7 @@ OpenAI Gym is a toolkit for reinforcement learning (RL) widely used in research.
 The Verilog to Routing (VTR) project is an open-source framework for conducting FPGA architecture and CAD research and development.
 
 ## Examples
-
+We provide an example at [example.py](./VprGym/example.py)
 ## Basic Interface
 1. Example Python script.
 ```
