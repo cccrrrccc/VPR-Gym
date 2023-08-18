@@ -78,10 +78,24 @@ else:
 ```
 Please refer to our paper for a detailed description.
 ## How to Cite
-The following paper may be used as a general citation for VTR:
+The following paper may be used as a general citation for VPR:
+
+Bibtex:
+```
+@article{murray2020vtr,
+  title={Vtr 8: High-performance cad and customizable fpga architecture modelling},
+  author={Murray, Kevin E and Petelin, Oleg and Zhong, Sheng and Wang, Jia Min and Eldafrawy, Mohamed and Legault, Jean-Philippe and Sha, Eugene and Graham, Aaron G and Wu, Jean and Walker, Matthew JP and others},
+  journal={ACM Transactions on Reconfigurable Technology and Systems (TRETS)},
+  volume={13},
+  number={2},
+  pages={1--55},
+  year={2020},
+  publisher={ACM New York, NY, USA}
+}
+```
+
+To cite our VPR-Gym:
 
 Bibtex:
 ```
 ```
-
-
