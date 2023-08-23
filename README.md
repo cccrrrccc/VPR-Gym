@@ -74,6 +74,9 @@ if pid > 0:
   train(env1, agent1)
 else:
   train(env2, agent2)
+```
+3. Environment attributes
+```
 
 ```
 Please refer to our paper for a detailed description.
