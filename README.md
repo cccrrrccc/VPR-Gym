@@ -77,7 +77,17 @@ else:
 ```
 3. Environment attributes
 ```
+num_actions: An integer shows the number of available directed moves.
 
+num_types: An integer shows the number of logical block types in the targeted FPGA design
+
+num_blks: A list consist of the number of blocks for each logical block type category
+
+horizon: An integer shows the number of steps within one temperature in the Simulated Annealing (SA) Process. Note that some multi-armed bandit algorithms require the horizon information in order to better plan the exploration and exploitation
+
+is_stage2: This is a Boolean variable showing the current stage of the SA process. As mentioned above, it would affect the number of available directed move types. Besides, "info == 'stage2'" returned by the step function can also be used as a flag for stage 2.
+
+info['delta'], info['delta_bb'], info['delta_time']: the normalized change of the circuit cost, the normalized change of the bounding box (related to Wire Length) cost, and the normalized change of the timing cost.
 ```
 Please refer to our paper for a detailed description.
 ## How to Cite
@@ -97,7 +107,7 @@ Bibtex:
 }
 ```
 
-To cite our VPR-Gym:
+To cite VPR-Gym:
 
 Bibtex:
 ```
