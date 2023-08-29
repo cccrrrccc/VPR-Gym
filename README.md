@@ -89,7 +89,7 @@ is_stage2: This is a Boolean variable showing the current stage of the SA proces
 
 info['delta'], info['delta_bb'], info['delta_time']: the normalized change of the circuit cost, the normalized change of the bounding box (related to Wire Length) cost, and the normalized change of the timing cost.
 ```
-Please refer to our paper for a detailed description.
+
 ## How to Cite
 The following paper may be used as a general citation for VPR:
 
