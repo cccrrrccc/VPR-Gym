@@ -61,6 +61,7 @@ class VprEnv(Env):
 		self.socket.connect(self.addr)
 		msgs = self.socket.recv_multipart()
 		self.num_actions = int(msgs[0].decode('utf-8'))
+		self.num_types = int(msgs[1].decode('utf-8'))
 		self.horizon = int(msgs[2].decode('utf-8'))
 		self.num_blks = []
 		for i in range(3, len(msgs)):
