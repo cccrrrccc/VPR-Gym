@@ -17,7 +17,7 @@ if __name__ == '__main__':
 	# done indicates whether the RL process is terminated or not
 	done = False
 	while (done == False):
-		action = avail_arms[randint(num_actions)] # Provide an action from agent, here random search is used as agent
+		action = avail_arms[randint(len(avail_arms))] # Provide an action from agent, here random search is used as agent
 		_, reward, done, info = env.step(action) # pass the action to environment via env.step()
 		current_reward = reward # The reward can be used to update agent
 		
@@ -33,4 +33,5 @@ if __name__ == '__main__':
 	print('Wire Length:', info['WL'])
 	print('Critical Path Delay:', info['CPD'])
 	print('Runtime:', info['RT'])
+	print('Total Swap:', info['RT'])
 

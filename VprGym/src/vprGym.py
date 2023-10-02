@@ -82,10 +82,11 @@ class VprEnv(Env):
 			reward = 0
 			self.socket.disconnect(self.addr)
 			time.sleep(30)
-			WL, CPD, RT = read_WL_CPD()
+			WL, CPD, RT, SWAP = read_WL_CPD()
 			info['WL'] = WL
 			info['CPD'] = CPD
 			info['RT'] = RT
+			info['SWAP'] = SWAP
 			back_to_init_directory()
 		elif (msg.decode('utf-8') == 'reset'):
 			done = False
@@ -164,10 +165,11 @@ class VprEnv_blk_type(Env):
 			reward = 0
 			self.socket.disconnect(self.addr)
 			time.sleep(30)
-			WL, CPD, RT = read_WL_CPD()
+			WL, CPD, RT, SWAP = read_WL_CPD()
 			info['WL'] = WL
 			info['CPD'] = CPD
 			info['RT'] = RT
+			info['SWAP'] = SWAP
 			back_to_init_directory()
 		elif (msg.decode('utf-8') == 'reset'):
 			done = False
