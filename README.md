@@ -111,4 +111,15 @@ To cite VPR-Gym:
 
 Bibtex:
 ```
+@INPROCEEDINGS{10296368,
+  author={Chen, Ruichen and Lu, Shengyao and Elgammal, Mohamed A. and Chun, Peter and Betz, Vaughn and Niu, Di},
+  booktitle={2023 33rd International Conference on Field-Programmable Logic and Applications (FPL)}, 
+  title={VPR-Gym: A Platform for Exploring AI Techniques in FPGA Placement Optimization}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={72-78},
+  keywords={Measurement;Machine learning algorithms;Design automation;Reinforcement learning;Market research;Libraries;Complexity theory;Reinforcement Learning;FPGA;Placement;VPR;OpenAI Gym},
+  doi={10.1109/FPL60245.2023.00018}}
+
 ```
